@@ -1,34 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prophetly</title>
-</head>
-<body style="font-family:sans-serif; text-align:center; padding:40px;">
 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .box {
+      max-width: 400px;
+      margin: auto;
+    }
+
+    button {
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 20px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
   <h1>Prophetly</h1>
 
-  <input type="file" id="imageInput"><br><br>
-  <button onclick="send()">Analyze</button>
+  <input type="file" id="file"><br><br>
+  <button id="analyzeBtn">Analyze</button>
 
+  <p id="status"></p>
   <p id="result"></p>
+</div>
 
-  <script>
-    async function send() {
-      const file = document.getElementById("imageInput").files[0];
-      if (!file) return alert("Upload image");
+<script>
+const fileInput = document.getElementById("file");
+const button = document.getElementById("analyzeBtn");
+const resultEl = document.getElementById("result");
+const statusEl = document.getElementById("status");
 
-      const formData = new FormData();
-      formData.append("image", file);
+button.addEventListener("click", async () => {
+  const file = fileInput.files[0];
 
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        body: formData
-      });
+  // ✅ validation
+  if (!file) {
+    statusEl.textContent = "Upload an image";
+    return;
+  }
 
-      const data = await res.json();
-      document.getElementById("result").innerText = data.result;
+  if (!file.type.startsWith("image/")) {
+    statusEl.textContent = "Only images allowed";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    statusEl.textContent = "Max size 5MB";
+    return;
+  }
+
+  // ✅ loading state
+  statusEl.textContent = "Analyzing...";
+  resultEl.textContent = "";
+
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const res = await fetch("/api/analyze", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    // ✅ error handling
+    if (!res.ok) {
+      statusEl.textContent = "Server error";
+      return;
     }
-  </script>
+
+    if (data.error) {
+      statusEl.textContent = data.error;
+      return;
+    }
+
+    // ✅ safe output
+    resultEl.textContent = data.result || "No result";
+    statusEl.textContent = "";
+
+  } catch (err) {
+    statusEl.textContent = "Network error";
+  }
+});
+</script>
 
 </body>
 </html>
