@@ -1,88 +1,159 @@
 import { useEffect, useState } from "react";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
-  const [market, setMarket] = useState(null);
+  const [markets, setMarkets] = useState([]);
 
-  const fetchMarket = async () => {
+  const fetchMarkets = async () => {
     const res = await fetch("/api/market");
     const data = await res.json();
-    setMarket(data);
+    setMarkets(data);
   };
 
-  const bet = async (choice) => {
+  const bet = async (id, choice) => {
     await fetch("/api/bet", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ choice }),
+      body: JSON.stringify({ id, choice, amount: 100 }),
     });
-    fetchMarket();
+
+    fetchMarkets();
   };
 
   useEffect(() => {
-    fetchMarket();
+    fetchMarkets();
   }, []);
 
-  if (!market) return <div>Loading...</div>;
-
-  const total = market.yes + market.no;
-  const yesPercent = ((market.yes / total) * 100).toFixed(1);
-  const noPercent = ((market.no / total) * 100).toFixed(1);
-
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Prophetly</h1>
+    <div className={inter.className} style={styles.page}>
+      {/* NAVBAR */}
+      <div style={styles.nav}>
+        <div style={styles.logo}>⚡ Prophetly</div>
+      </div>
 
-      <div style={styles.card}>
-        <h2>{market.question}</h2>
+      {/* HERO */}
+      <div style={styles.hero}>
+        <h1 style={styles.heroTitle}>Predict the future.</h1>
+        <p style={styles.heroSub}>Beat the market.</p>
+      </div>
 
-        <div style={styles.buttons}>
-          <button style={styles.yes} onClick={() => bet("YES")}>
-            YES ({yesPercent}%)
-          </button>
-          <button style={styles.no} onClick={() => bet("NO")}>
-            NO ({noPercent}%)
-          </button>
-        </div>
+      {/* MARKETS */}
+      <div style={styles.marketContainer}>
+        {markets.map((m) => {
+          const total = m.yes + m.no;
+          const yesPercent = ((m.yes / total) * 100).toFixed(1);
+          const noPercent = ((m.no / total) * 100).toFixed(1);
 
-        <div style={styles.bar}>
-          <div style={{ ...styles.yesBar, width: `${yesPercent}%` }} />
-          <div style={{ ...styles.noBar, width: `${noPercent}%` }} />
-        </div>
+          return (
+            <div key={m.id} style={styles.card}>
+              <h2 style={styles.question}>{m.question}</h2>
+
+              <div style={styles.buttons}>
+                <button
+                  style={styles.yes}
+                  onClick={() => bet(m.id, "YES")}
+                >
+                  YES ({yesPercent}%)
+                </button>
+
+                <button
+                  style={styles.no}
+                  onClick={() => bet(m.id, "NO")}
+                >
+                  NO ({noPercent}%)
+                </button>
+              </div>
+
+              {/* BAR */}
+              <div style={styles.bar}>
+                <div
+                  style={{
+                    ...styles.yesBar,
+                    width: `${yesPercent}%`,
+                  }}
+                />
+                <div
+                  style={{
+                    ...styles.noBar,
+                    width: `${noPercent}%`,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 const styles = {
-  container: {
-    background: "#0b0f1a",
+  page: {
+    background: "#05070d",
     color: "white",
     minHeight: "100vh",
+    padding: "20px",
+  },
+
+  nav: {
     display: "flex",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    fontFamily: "sans-serif",
+    marginBottom: "40px",
   },
-  title: {
-    position: "absolute",
-    top: 20,
-    left: 30,
+
+  logo: {
+    fontWeight: "700",
+    fontSize: "20px",
+    letterSpacing: "-0.5px",
   },
+
+  hero: {
+    textAlign: "center",
+    marginBottom: "60px",
+  },
+
+  heroTitle: {
+    fontSize: "48px",
+    fontWeight: "700",
+    letterSpacing: "-1px",
+  },
+
+  heroSub: {
+    fontSize: "18px",
+    opacity: 0.7,
+    marginTop: "10px",
+  },
+
+  marketContainer: {
+    display: "grid",
+    gap: "20px",
+    maxWidth: "600px",
+    margin: "0 auto",
+  },
+
   card: {
     background: "rgba(255,255,255,0.05)",
-    padding: "30px",
+    padding: "20px",
     borderRadius: "16px",
-    width: "350px",
-    textAlign: "center",
-    backdropFilter: "blur(10px)",
+    backdropFilter: "blur(12px)",
+    border: "1px solid rgba(255,255,255,0.1)",
   },
+
+  question: {
+    fontSize: "18px",
+    marginBottom: "15px",
+  },
+
   buttons: {
     display: "flex",
     gap: "10px",
-    marginTop: "20px",
   },
+
   yes: {
     flex: 1,
     background: "#16c784",
@@ -92,6 +163,7 @@ const styles = {
     color: "white",
     cursor: "pointer",
   },
+
   no: {
     flex: 1,
     background: "#ea3943",
@@ -101,16 +173,19 @@ const styles = {
     color: "white",
     cursor: "pointer",
   },
+
   bar: {
     display: "flex",
-    height: "10px",
-    marginTop: "20px",
+    height: "8px",
+    marginTop: "15px",
     borderRadius: "10px",
     overflow: "hidden",
   },
+
   yesBar: {
     background: "#16c784",
   },
+
   noBar: {
     background: "#ea3943",
   },
