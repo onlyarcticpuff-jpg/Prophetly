@@ -1,7 +1,3 @@
-export const config = {
-  api: { bodyParser: false },
-};
-
 export default async function handler(req, res) {
   try {
     const API_KEY = process.env.GEMINI_API_KEY;
@@ -9,8 +5,9 @@ export default async function handler(req, res) {
     if (!API_KEY) {
       return res.status(500).json({ result: "NO API KEY" });
     }
+
     const response = await fetch(
-  `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -30,13 +27,15 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // 👇 RETURN FULL RESPONSE FOR DEBUG
-    return res.status(200).json({
-  result:
-    data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join(" ") || "No response"
-});
+    console.log("FULL DATA:", data);
+
+    const result =
+      data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join(" ")
+      || "No response";
+
+    return res.status(200).json({ result });
 
   } catch (err) {
-    return res.status(500).json({ error: err.toString() });
+    return res.status(500).json({ result: err.toString() });
   }
 }
