@@ -4,104 +4,65 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prophetly</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-      text-align: center;
-      padding: 40px;
-    }
-
-    .box {
-      max-width: 400px;
-      margin: auto;
-    }
-
-    button {
-      padding: 10px 20px;
-      cursor: pointer;
-    }
-
-    #result {
-      margin-top: 20px;
-      white-space: pre-wrap;
-    }
-  </style>
 </head>
-<body>
+<body style="font-family:sans-serif; text-align:center; padding:40px;">
 
-<div class="box">
   <h1>Prophetly</h1>
 
-  <input type="file" id="file"><br><br>
-  <button id="analyzeBtn">Analyze</button>
+  <textarea id="input" placeholder="Ask something..." rows="4" cols="40"></textarea>
+  <br><br>
+
+  <button id="btn">Analyze</button>
 
   <p id="status"></p>
-  <p id="result"></p>
-</div>
+  <pre id="result"></pre>
 
-<script>
-const fileInput = document.getElementById("file");
-const button = document.getElementById("analyzeBtn");
-const resultEl = document.getElementById("result");
-const statusEl = document.getElementById("status");
+  <script>
+    const btn = document.getElementById("btn");
+    const input = document.getElementById("input");
+    const result = document.getElementById("result");
+    const status = document.getElementById("status");
 
-button.addEventListener("click", async () => {
-  const file = fileInput.files[0];
+    btn.addEventListener("click", async () => {
+      const text = input.value.trim();
 
-  // ✅ validation
-  if (!file) {
-    statusEl.textContent = "Upload an image";
-    return;
-  }
+      if (!text) {
+        status.textContent = "Enter something";
+        return;
+      }
 
-  if (!file.type.startsWith("image/")) {
-    statusEl.textContent = "Only images allowed";
-    return;
-  }
+      status.textContent = "Thinking...";
+      result.textContent = "";
 
-  if (file.size > 5 * 1024 * 1024) {
-    statusEl.textContent = "Max size 5MB";
-    return;
-  }
+      try {
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ text })
+        });
 
-  // ✅ loading state
-  statusEl.textContent = "Analyzing...";
-  resultEl.textContent = "";
+        const data = await res.json();
 
-  try {
-    const formData = new FormData();
-    formData.append("image", file);
+        if (!res.ok) {
+          status.textContent = "Server error";
+          return;
+        }
 
-    const res = await fetch("/api/analyze", {
-      method: "POST",
-      body: formData
+        if (data.error) {
+          status.textContent = data.error;
+          return;
+        }
+
+        result.textContent = data.result || "No response";
+        status.textContent = "";
+
+      } catch (err) {
+        status.textContent = "Network error";
+      }
     });
-
-    const data = await res.json();
-
-    // ✅ error handling
-    if (!res.ok) {
-      statusEl.textContent = "Server error";
-      return;
-    }
-
-    if (data.error) {
-      statusEl.textContent = data.error;
-      return;
-    }
-
-    // ✅ safe output
-    resultEl.textContent = data.result || "No result";
-    statusEl.textContent = "";
-
-  } catch (err) {
-    statusEl.textContent = "Network error";
-  }
-});
-</script>
+  </script>
 
 </body>
 </html>
