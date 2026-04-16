@@ -6,6 +6,12 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: "Missing API key" });
     }
 
+    const { text } = req.body || {};
+
+    if (!text) {
+      return res.status(400).json({ error: "No input text" });
+    }
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
       {
@@ -17,7 +23,7 @@ module.exports = async (req, res) => {
           contents: [
             {
               parts: [
-                { text: "Say hello in one short sentence." }
+                { text: `Answer this clearly and helpfully:\n${text}` }
               ]
             }
           ]
@@ -25,19 +31,16 @@ module.exports = async (req, res) => {
       }
     );
 
-    // ✅ Check HTTP status
     if (!response.ok) {
-      const errText = await response.text();
-      console.error("HTTP ERROR:", errText);
-      return res.status(response.status).json({ error: "Upstream API error" });
+      const err = await response.text();
+      console.error("API ERROR:", err);
+      return res.status(500).json({ error: "Gemini API error" });
     }
 
     const data = await response.json();
 
-    // ✅ Gemini error inside body
     if (data.error) {
-      console.error("GEMINI ERROR:", data.error);
-      return res.status(500).json({ error: data.error.message || "Gemini error" });
+      return res.status(500).json({ error: data.error.message });
     }
 
     const result =
@@ -48,6 +51,4 @@ module.exports = async (req, res) => {
 
   } catch (err) {
     console.error("SERVER ERROR:", err);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
+    return res.status(500
