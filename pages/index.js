@@ -12,80 +12,62 @@ export default function Home() {
     setMarkets(data);
   };
 
-  const bet = async (id, choice) => {
-    await fetch("/api/bet", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id, choice, amount: 100 }),
-    });
-
-    fetchMarkets();
-  };
-
   useEffect(() => {
     fetchMarkets();
   }, []);
 
   return (
     <div className={inter.className} style={styles.page}>
-      {/* NAVBAR */}
+      
+      {/* NAV */}
       <div style={styles.nav}>
         <div style={styles.logo}>⚡ Prophetly</div>
+        <button style={styles.navBtn}>Start</button>
       </div>
 
       {/* HERO */}
       <div style={styles.hero}>
-        <h1 style={styles.heroTitle}>Predict the future.</h1>
-        <p style={styles.heroSub}>Beat the market.</p>
+        <h1 style={styles.heroTitle}>
+          Predict the future.
+        </h1>
+        <p style={styles.heroSub}>
+          A new way to understand markets — powered by people.
+        </p>
+
+        <div style={styles.ctaContainer}>
+          <button style={styles.primaryBtn}>Start Predicting</button>
+        </div>
+      </div>
+
+      {/* FEATURE GLASS CARD */}
+      <div style={styles.feature}>
+        <div style={styles.featureCard}>
+          <h2 style={styles.featureTitle}>
+            Real-time market sentiment
+          </h2>
+          <p style={styles.featureText}>
+            Watch probabilities shift as people place predictions.
+          </p>
+        </div>
       </div>
 
       {/* MARKETS */}
-      <div style={styles.marketContainer}>
-        {markets.map((m) => {
-          const total = m.yes + m.no;
-          const yesPercent = ((m.yes / total) * 100).toFixed(1);
-          const noPercent = ((m.no / total) * 100).toFixed(1);
+      <div style={styles.marketSection}>
+        <h2 style={styles.sectionTitle}>Live Markets</h2>
 
-          return (
-            <div key={m.id} style={styles.card}>
-              <h2 style={styles.question}>{m.question}</h2>
+        <div style={styles.marketGrid}>
+          {markets.map((m) => {
+            const total = m.yes + m.no;
+            const yesPercent = ((m.yes / total) * 100).toFixed(0);
 
-              <div style={styles.buttons}>
-                <button
-                  style={styles.yes}
-                  onClick={() => bet(m.id, "YES")}
-                >
-                  YES ({yesPercent}%)
-                </button>
-
-                <button
-                  style={styles.no}
-                  onClick={() => bet(m.id, "NO")}
-                >
-                  NO ({noPercent}%)
-                </button>
+            return (
+              <div key={m.id} style={styles.card}>
+                <div style={styles.question}>{m.question}</div>
+                <div style={styles.percent}>{yesPercent}% YES</div>
               </div>
-
-              {/* BAR */}
-              <div style={styles.bar}>
-                <div
-                  style={{
-                    ...styles.yesBar,
-                    width: `${yesPercent}%`,
-                  }}
-                />
-                <div
-                  style={{
-                    ...styles.noBar,
-                    width: `${noPercent}%`,
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -109,84 +91,101 @@ const styles = {
   logo: {
     fontWeight: "700",
     fontSize: "20px",
-    letterSpacing: "-0.5px",
+  },
+
+  navBtn: {
+    background: "rgba(255,255,255,0.1)",
+    border: "none",
+    padding: "8px 14px",
+    borderRadius: "10px",
+    color: "white",
+    cursor: "pointer",
   },
 
   hero: {
     textAlign: "center",
-    marginBottom: "60px",
+    marginTop: "80px",
+    marginBottom: "80px",
   },
 
   heroTitle: {
-    fontSize: "48px",
-    fontWeight: "700",
-    letterSpacing: "-1px",
+    fontSize: "56px",
+    fontWeight: "800",
+    letterSpacing: "-2px",
   },
 
   heroSub: {
-    fontSize: "18px",
+    marginTop: "20px",
     opacity: 0.7,
-    marginTop: "10px",
+    fontSize: "18px",
   },
 
-  marketContainer: {
-    display: "grid",
-    gap: "20px",
-    maxWidth: "600px",
+  ctaContainer: {
+    marginTop: "30px",
+  },
+
+  primaryBtn: {
+    background: "white",
+    color: "black",
+    padding: "12px 20px",
+    borderRadius: "12px",
+    border: "none",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+
+  feature: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: "80px",
+  },
+
+  featureCard: {
+    background: "rgba(255,255,255,0.05)",
+    padding: "30px",
+    borderRadius: "20px",
+    backdropFilter: "blur(15px)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    maxWidth: "500px",
+    textAlign: "center",
+  },
+
+  featureTitle: {
+    fontSize: "22px",
+    marginBottom: "10px",
+  },
+
+  featureText: {
+    opacity: 0.7,
+  },
+
+  marketSection: {
+    maxWidth: "800px",
     margin: "0 auto",
+  },
+
+  sectionTitle: {
+    marginBottom: "20px",
+  },
+
+  marketGrid: {
+    display: "grid",
+    gap: "15px",
   },
 
   card: {
     background: "rgba(255,255,255,0.05)",
-    padding: "20px",
-    borderRadius: "16px",
-    backdropFilter: "blur(12px)",
+    padding: "15px",
+    borderRadius: "14px",
+    backdropFilter: "blur(10px)",
     border: "1px solid rgba(255,255,255,0.1)",
   },
 
   question: {
-    fontSize: "18px",
-    marginBottom: "15px",
+    marginBottom: "5px",
   },
 
-  buttons: {
-    display: "flex",
-    gap: "10px",
-  },
-
-  yes: {
-    flex: 1,
-    background: "#16c784",
-    border: "none",
-    padding: "10px",
-    borderRadius: "8px",
-    color: "white",
-    cursor: "pointer",
-  },
-
-  no: {
-    flex: 1,
-    background: "#ea3943",
-    border: "none",
-    padding: "10px",
-    borderRadius: "8px",
-    color: "white",
-    cursor: "pointer",
-  },
-
-  bar: {
-    display: "flex",
-    height: "8px",
-    marginTop: "15px",
-    borderRadius: "10px",
-    overflow: "hidden",
-  },
-
-  yesBar: {
-    background: "#16c784",
-  },
-
-  noBar: {
-    background: "#ea3943",
+  percent: {
+    opacity: 0.7,
   },
 };
