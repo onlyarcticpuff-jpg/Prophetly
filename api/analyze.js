@@ -1,9 +1,9 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   try {
     const API_KEY = process.env.GEMINI_API_KEY;
 
     if (!API_KEY) {
-      return res.status(500).json({ result: "NO API KEY" });
+      return res.status(500).json({ error: "Missing API key" });
     }
 
     const response = await fetch(
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
           contents: [
             {
               parts: [
-                { text: "Say hello. Just respond with 1 sentence." }
+                { text: "Say hello in one short sentence." }
               ]
             }
           ]
@@ -25,9 +25,20 @@ export default async function handler(req, res) {
       }
     );
 
+    // ✅ Check HTTP status
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("HTTP ERROR:", errText);
+      return res.status(response.status).json({ error: "Upstream API error" });
+    }
+
     const data = await response.json();
 
-    console.log("FULL DATA:", data);
+    // ✅ Gemini error inside body
+    if (data.error) {
+      console.error("GEMINI ERROR:", data.error);
+      return res.status(500).json({ error: data.error.message || "Gemini error" });
+    }
 
     const result =
       data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join(" ")
@@ -36,6 +47,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ result });
 
   } catch (err) {
-    return res.status(500).json({ result: err.toString() });
+    console.error("SERVER ERROR:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
-}
+};
