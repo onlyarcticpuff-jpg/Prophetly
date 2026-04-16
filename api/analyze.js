@@ -6,7 +6,15 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: "Missing API key" });
     }
 
-    const { text } = req.body || {};
+    // 👇 manually parse body
+    let body = "";
+
+    for await (const chunk of req) {
+      body += chunk;
+    }
+
+    const parsed = JSON.parse(body || "{}");
+    const text = parsed.text;
 
     if (!text) {
       return res.status(400).json({ error: "No input text" });
@@ -23,7 +31,7 @@ module.exports = async (req, res) => {
           contents: [
             {
               parts: [
-                { text: `Answer this clearly and helpfully:\n${text}` }
+                { text: `Answer clearly:\n${text}` }
               ]
             }
           ]
@@ -31,17 +39,7 @@ module.exports = async (req, res) => {
       }
     );
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error("API ERROR:", err);
-      return res.status(500).json({ error: "Gemini API error" });
-    }
-
     const data = await response.json();
-
-    if (data.error) {
-      return res.status(500).json({ error: data.error.message });
-    }
 
     const result =
       data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join(" ")
@@ -50,5 +48,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({ result });
 
   } catch (err) {
-    console.error("SERVER ERROR:", err);
-    return res.status(500
+    console.error("CRASH:", err);
+    return res.status(500).json({ error: err.toString() });
+  }
+};
