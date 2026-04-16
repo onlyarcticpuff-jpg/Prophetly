@@ -32,10 +32,9 @@ export default async function handler(req, res) {
 
     // 👇 RETURN FULL RESPONSE FOR DEBUG
     return res.status(200).json({
-      raw: data,
-      text:
-        data?.candidates?.[0]?.content?.parts?.map(p => p.text).join(" ")
-    });
+  result:
+    data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join(" ") || "No response"
+});
 
   } catch (err) {
     return res.status(500).json({ error: err.toString() });
