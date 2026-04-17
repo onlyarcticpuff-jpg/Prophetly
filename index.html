@@ -1,68 +1,116 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
   <title>Prophetly</title>
-</head>
-<body style="font-family:sans-serif; text-align:center; padding:40px;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0f1a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-  <h1>Prophetly</h1>
+    .container {
+      text-align: center;
+      background: #111827;
+      padding: 40px;
+      border-radius: 16px;
+      width: 320px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    }
 
-  <textarea id="input" placeholder="Ask something..." rows="4" cols="40"></textarea>
-  <br><br>
+    h1 {
+      margin-bottom: 10px;
+    }
 
-  <button id="btn">Analyze</button>
+    p {
+      opacity: 0.7;
+      margin-bottom: 20px;
+    }
 
-  <p id="status"></p>
-  <pre id="result"></pre>
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+    }
 
-  <script>
-    const btn = document.getElementById("btn");
-    const input = document.getElementById("input");
-    const result = document.getElementById("result");
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #4f46e5;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #4338ca;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+  </style></head>
+<body>  <div class="container">
+    <h1>Prophetly</h1>
+    <p>Play smarter.</p><input id="email" type="email" placeholder="Email" />
+<input id="password" type="password" placeholder="Password" />
+
+<button onclick="login()">Login</button>
+<button onclick="signup()">Sign Up</button>
+
+<div class="status" id="status"></div>
+
+  </div>  <!-- Supabase -->  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <script>
+    const supabase = window.supabase.createClient(
+      "https://yjeedgcveawterfpvnuc.supabase.co",
+      "sb_publishable_Z5FbPNQg7OV9yPK8RZDSpg_7FSCM5_n"
+    );
+
     const status = document.getElementById("status");
 
-    btn.addEventListener("click", async () => {
-      const text = input.value.trim();
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-      if (!text) {
-        status.textContent = "Enter something";
-        return;
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        status.innerText = error.message;
+      } else {
+        status.innerText = "Logged in 😤";
       }
+    }
 
-      status.textContent = "Thinking...";
-      result.textContent = "";
+    async function signup() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-      try {
-        const res = await fetch("/api/analyze", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ text })
-        });
+      const { error } = await supabase.auth.signUp({
+        email,
+        password
+      });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          status.textContent = "Server error";
-          return;
-        }
-
-        if (data.error) {
-          status.textContent = data.error;
-          return;
-        }
-
-        result.textContent = data.result || "No response";
-        status.textContent = "";
-
-      } catch (err) {
-        status.textContent = "Network error";
+      if (error) {
+        status.innerText = error.message;
+      } else {
+        status.innerText = "Account created 🔥";
       }
-    });
-  </script>
-
-</body>
+    }
+  </script></body>
 </html>
