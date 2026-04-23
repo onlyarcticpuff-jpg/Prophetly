@@ -380,24 +380,35 @@
 
   // ── Profile ──
   let profile = null;
+ 
   async function loadProfile() {
-    const { data } = await supabase
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!data) {
+    const { data: created } = await supabase
       .from("profiles")
-      .select("*")
-      .eq("id", user.id)
+      .insert({
+        id: user.id,
+        email: user.email,
+        balance: 1000,
+        streak: 0,
+        total_picks: 0,
+        correct_picks: 0
+      })
+      .select()
       .single();
 
-    if (!data) {
-      // Create profile if missing
-      const { data: created } = await supabase
-        .from("profiles")
-        .upsert({ id: user.id, email: user.email, balance: 1000, streak: 0, total_picks: 0, correct_picks: 0 })
-        .select().single();
-      profile = created;
-    } else {
-      profile = data;
-    }
-    updateNavBalance();
+    profile = created;
+  } else {
+    profile = data;
+  }
+
+  console.log("PROFILE:", profile); // 🔥
+  updateNavBalance();
   }
 
   function updateNavBalance() {
