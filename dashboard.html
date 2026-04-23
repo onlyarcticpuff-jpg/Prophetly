@@ -296,42 +296,43 @@
   }).join("");
 
   // History (from localStorage votes — replace with Supabase votes table later)
-  const votesKey = `prophetly_votes_${user.id}`;
-  const myVotes  = JSON.parse(localStorage.getItem(votesKey) || "{}");
-  const myWagers = JSON.parse(localStorage.getItem(votesKey + "_w") || "{}");
+  const { data: bets, error } = await supabase
+  .from("bets")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false });
 
-  const PRED_TITLES = {
-    p1: "Will it rain in NYC today?", p2: "Will the Lakers win tonight?",
-    p3: "Will Elon tweet something wild before noon?", p4: "Will BTC close above $70k today?",
-    p5: "Will Apple announce something at WWDC?", p6: "Will someone leave a 1-star review for a 5-star restaurant?",
-    p7: "Will there be a walk-off home run in MLB today?", p8: "Will it snow anywhere in Florida today?"
-  };
+if (error) {
+  histList.innerHTML = `<div class="empty">Failed to load bets 💀</div>`;
+} else if (!bets || bets.length === 0) {
+  histList.innerHTML = `<div class="empty">No picks yet — go make some predictions! 💀</div>`;
+  document.getElementById("histCount").textContent = "0 picks";
+} else {
+  document.getElementById("histCount").textContent = bets.length + " picks";
 
-  const histList = document.getElementById("histList");
-  const voteEntries = Object.entries(myVotes);
-  document.getElementById("histCount").textContent = voteEntries.length + " picks";
+  histList.innerHTML = bets.map((bet) => {
+    const id = bet.prediction_id;
+    const vote = bet.choice;
+    const wager = bet.amount;
 
-  if (voteEntries.length === 0) {
-    histList.innerHTML = `<div class="empty">No picks yet — go make some predictions! 💀</div>`;
-  } else {
-    histList.innerHTML = voteEntries.map(([id, vote]) => {
-      const wager = myWagers[id];
-      const title = PRED_TITLES[id] || "Unknown prediction";
-      // Pending (not resolved yet)
-      return `
-      <div class="history-row">
-        <div class="history-outcome open">⏳</div>
-        <div class="history-q">
-          ${title}
-          <div class="history-sub">You voted <strong>${vote.toUpperCase()}</strong> · Pending</div>
+    const title = PRED_TITLES[id] || id;
+
+    return `
+    <div class="history-row">
+      <div class="history-outcome open">⏳</div>
+      <div class="history-q">
+        ${title}
+        <div class="history-sub">
+          You voted <strong>${vote.toUpperCase()}</strong> · Pending
         </div>
-        <div class="history-amt">
-          <div class="amt-val neu">${wager ? "$" + wager : "—"}</div>
-          <div class="amt-sub">wagered</div>
-        </div>
-      </div>`;
-    }).join("");
-  }
+      </div>
+      <div class="history-amt">
+        <div class="amt-val neu">${wager ? "$" + wager : "—"}</div>
+        <div class="amt-sub">wagered</div>
+      </div>
+    </div>`;
+  }).join("");
+}
 
   // Logout
   document.getElementById("logoutBtn").addEventListener("click", async () => {
