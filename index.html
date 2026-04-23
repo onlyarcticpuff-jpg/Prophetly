@@ -533,7 +533,7 @@ let myWagers = {};
     }).join("");
 
     // Vote button listeners
-    list.querySelectorAll(".vote-btn:not([disabled])").forEach(btn => {
+    list.querySelectorAll(".vote-btn").forEach(btn => {
       btn.addEventListener("click", () => handleVote(btn.dataset.id, btn.dataset.vote));
     });
   }
