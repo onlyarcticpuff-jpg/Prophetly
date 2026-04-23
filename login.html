@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prophetly — Sign In</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080b12;
+      --card: #0e1420;
+      --border: rgba(255,255,255,0.06);
+      --accent: #e8ff57;
+      --accent-dim: rgba(232,255,87,0.12);
+      --text: #f0f2f8;
+      --muted: #5a6478;
+      --input: #131a28;
+      --error: #ff6b6b;
+      --success: #57ffa8;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; opacity: 0.6;
+    }
+
+    /* Glow blobs */
+    .blob {
+      position: fixed; border-radius: 50%; filter: blur(80px);
+      pointer-events: none; z-index: 0;
+    }
+    .blob-1 { width: 360px; height: 360px; background: rgba(232,255,87,0.07); top: -100px; right: -80px; }
+    .blob-2 { width: 280px; height: 280px; background: rgba(87,160,255,0.06); bottom: -60px; left: -60px; }
+
+    .scene { position: relative; z-index: 1; width: 100%; max-width: 400px; padding: 20px; }
+
+    /* Wordmark */
+    .wordmark {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 13px; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--muted);
+      text-align: center; margin-bottom: 40px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .wordmark em { color: var(--accent); font-style: normal; }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02);
+      animation: fadeUp 0.55s 0.05s ease both;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px; font-weight: 800;
+      line-height: 1.1; margin-bottom: 6px;
+    }
+    .card-sub { color: var(--muted); font-size: 14px; font-weight: 300; margin-bottom: 30px; }
+
+    /* Tabs */
+    .tabs {
+      display: flex; background: var(--input); border-radius: 10px;
+      padding: 3px; margin-bottom: 26px; gap: 3px;
+    }
+    .tab {
+      flex: 1; padding: 8px; border: none; background: transparent;
+      color: var(--muted); font-family: 'Outfit', sans-serif;
+      font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .tab.active { background: #1c2438; color: var(--text); }
+
+    /* Fields */
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px;
+      margin-bottom: 7px;
+    }
+    .field input {
+      width: 100%; padding: 12px 15px;
+      background: var(--input); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-family: 'Outfit', sans-serif; font-size: 15px;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input::placeholder { color: #2d3748; }
+    .field input:focus {
+      border-color: rgba(232,255,87,0.3);
+      box-shadow: 0 0 0 3px rgba(232,255,87,0.06);
+    }
+
+    /* Button */
+    .btn {
+      width: 100%; padding: 14px; margin-top: 10px;
+      background: var(--accent); border: none; border-radius: 10px;
+      color: #080b12; font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight: 800; letter-spacing: 0.5px;
+      cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 4px 30px rgba(232,255,87,0.22);
+    }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #1c2438; border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 18px;
+      font-size: 13px; font-weight: 500; color: var(--text);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 9999; transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.error { color: var(--error); border-color: rgba(255,107,107,0.3); }
+    #toast.success { color: var(--success); border-color: rgba(87,255,168,0.3); }
+
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid rgba(8,11,18,0.3);
+      border-top-color: #080b12; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block; vertical-align: middle; margin-right: 7px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div id="toast"></div>
+
+<div class="scene">
+  <div class="wordmark">⚡ <em>Prophetly</em></div>
+
+  <div class="card">
+    <div class="card-title">Play smarter.</div>
+    <div class="card-sub">Predict everything. Win big.</div>
+
+    <div class="tabs">
+      <button class="tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+      <button class="tab" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- Login -->
+    <div id="formLogin">
+      <div class="field"><label>Email</label><input id="lEmail" type="email" placeholder="you@example.com" /></div>
+      <div class="field"><label>Password</label><input id="lPass" type="password" placeholder="••••••••" /></div>
+      <button class="btn" id="loginBtn">Sign In</button>
+    </div>
+
+    <!-- Signup -->
+    <div id="formSignup" class="hidden">
+      <div class="field"><label>Email</label><input id="sEmail" type="email" placeholder="you@example.com" /></div>
+      <div class="field"><label>Password</label><input id="sPass" type="password" placeholder="Min. 8 characters" /></div>
+      <div class="field"><label>Confirm</label><input id="sConfirm" type="password" placeholder="••••••••" /></div>
+      <button class="btn" id="signupBtn">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  const supabase = createClient(
+    "https://yjeedgcveawterfpvnuc.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqZWVkZ2N2ZWF3dGVyZnB2bnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzU3MjYsImV4cCI6MjA5MjAxMTcyNn0.nAcKJcUjVZW8-qrPm3n9XDvoqUm4jcD3srZwJkPuUBU",
+    { auth: { persistSession: true, autoRefreshToken: true } }
+  );
+
+  // If already logged in, go straight to game
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) window.location.replace("index.html");
+
+  // Toast
+  const toast = document.getElementById("toast");
+  let toastTimer;
+  function showToast(msg, type = "info") {
+    toast.className = type;
+    toast.textContent = msg;
+    void toast.offsetWidth;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 3500);
+  }
+
+  function setLoading(btn, on, label) {
+    btn.disabled = on;
+    btn.innerHTML = on ? `<span class="spinner"></span>${label}` : label;
+  }
+
+  window.switchTab = (tab) => {
+    document.getElementById("tabLogin").classList.toggle("active",  tab === "login");
+    document.getElementById("tabSignup").classList.toggle("active", tab === "signup");
+    document.getElementById("formLogin").classList.toggle("hidden", tab !== "login");
+    document.getElementById("formSignup").classList.toggle("hidden", tab !== "signup");
+  };
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("loginBtn");
+    const email = document.getElementById("lEmail").value.trim();
+    const pass  = document.getElementById("lPass").value;
+    if (!email || !pass) return showToast("Fill in all fields.", "error");
+
+    setLoading(btn, true, "Signing in…");
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    setLoading(btn, false, "Sign In");
+
+    if (error) return showToast(error.message, "error");
+    window.location.replace("index.html");
+  });
+
+  document.getElementById("signupBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("signupBtn");
+    const email   = document.getElementById("sEmail").value.trim();
+    const pass    = document.getElementById("sPass").value;
+    const confirm = document.getElementById("sConfirm").value;
+    if (!email || !pass || !confirm) return showToast("Fill in all fields.", "error");
+    if (pass !== confirm)             return showToast("Passwords don't match.", "error");
+    if (pass.length < 8)              return showToast("Password needs 8+ chars.", "error");
+
+    setLoading(btn, true, "Creating account…");
+    const { data, error } = await supabase.auth.signUp({ email, password: pass });
+    setLoading(btn, false, "Create Account");
+
+    if (error) return showToast(error.message, "error");
+    // Insert starter profile row in Supabase
+    if (data.user) {
+      await supabase.from("profiles").upsert({
+        id: data.user.id,
+        email: data.user.email,
+        balance: 1000,
+        streak: 0,
+        total_picks: 0,
+        correct_picks: 0
+      });
+      window.location.replace("index.html");
+    } else {
+      showToast("Check your email to confirm!", "success");
+    }
+  });
+</script>
+</body>
+</html>

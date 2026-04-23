@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prophetly</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080b12;
+      --surface: #0e1420;
+      --raised:  #131a28;
+      --border:  rgba(255,255,255,0.06);
+      --accent:  #e8ff57;
+      --green:   #57ffa8;
+      --red:     #ff6b6b;
+      --blue:    #57a8ff;
+      --text:    #f0f2f8;
+      --muted:   #4a5568;
+      --sub:     #8892a4;
+    }
+
+    html { height: 100%; }
+    body {
+      min-height: 100%; background: var(--bg); color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      padding-bottom: 40px;
+    }
+
+    /* noise */
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    .blob { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
+    .blob-1 { width: 500px; height: 500px; background: rgba(232,255,87,0.04); top: -200px; right: -100px; }
+    .blob-2 { width: 400px; height: 400px; background: rgba(87,160,255,0.04); bottom: -100px; left: -80px; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,11,18,0.85); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+      animation: fadeDown 0.4s ease both;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px;
+      letter-spacing: -0.3px;
+    }
+    .logo span { color: var(--accent); }
+
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+
+    .balance-pill {
+      background: var(--raised); border: 1px solid var(--border);
+      border-radius: 100px; padding: 6px 14px;
+      font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .balance-pill .amt { color: var(--accent); font-family: 'Syne', sans-serif; }
+
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #57ffa8);
+      display: grid; place-items: center;
+      font-size: 13px; font-weight: 700; color: #080b12;
+      cursor: pointer; flex-shrink: 0;
+      position: relative;
+    }
+    .avatar-menu {
+      position: absolute; top: calc(100% + 10px); right: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 6px;
+      min-width: 160px; z-index: 200;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+      display: none;
+    }
+    .avatar-menu.open { display: block; animation: popIn 0.18s ease; }
+    .avatar-menu a, .avatar-menu button {
+      display: block; width: 100%; text-align: left;
+      padding: 9px 12px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; color: var(--sub);
+      background: none; border: none; cursor: pointer;
+      text-decoration: none; transition: background 0.15s, color 0.15s;
+      font-family: 'Outfit', sans-serif;
+    }
+    .avatar-menu a:hover, .avatar-menu button:hover { background: var(--raised); color: var(--text); }
+    .avatar-menu .danger { color: var(--red); }
+    .avatar-menu .danger:hover { background: rgba(255,107,107,0.08); }
+
+    /* ── MAIN ── */
+    main { max-width: 700px; margin: 0 auto; padding: 28px 18px 0; position: relative; z-index: 1; }
+
+    /* Hero strip */
+    .hero {
+      margin-bottom: 26px;
+      animation: fadeUp 0.45s 0.05s ease both;
+    }
+    .hero-date { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .hero-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; line-height: 1.15; }
+    .hero-title em { color: var(--accent); font-style: normal; }
+
+    /* ── CATEGORIES ── */
+    .cat-row {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+      scrollbar-width: none; margin-bottom: 22px;
+      animation: fadeUp 0.45s 0.1s ease both;
+    }
+    .cat-row::-webkit-scrollbar { display: none; }
+    .cat-btn {
+      flex-shrink: 0; padding: 7px 15px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 100px; color: var(--sub);
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .cat-btn:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+    .cat-btn.active {
+      background: var(--accent); border-color: var(--accent);
+      color: #080b12; font-weight: 600;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    /* ── PREDICTION CARDS ── */
+    .predictions { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+
+    .pred-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+    .pred-card:hover { border-color: rgba(255,255,255,0.12); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+
+    .pred-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .pred-cat {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 3px 9px; border-radius: 100px;
+    }
+    .cat-weather  { background: rgba(87,168,255,0.12); color: var(--blue); border: 1px solid rgba(87,168,255,0.2); }
+    .cat-sports   { background: rgba(87,255,168,0.1);  color: var(--green); border: 1px solid rgba(87,255,168,0.2); }
+    .cat-dumb     { background: rgba(232,255,87,0.1);  color: var(--accent); border: 1px solid rgba(232,255,87,0.2); }
+    .cat-finance  { background: rgba(255,107,107,0.1); color: var(--red); border: 1px solid rgba(255,107,107,0.2); }
+    .cat-tech     { background: rgba(180,87,255,0.1);  color: #c57fff; border: 1px solid rgba(180,87,255,0.2); }
+
+    .pred-odds { font-size: 12px; color: var(--muted); }
+    .pred-odds strong { color: var(--text); }
+
+    .pred-question {
+      font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700;
+      line-height: 1.3; margin-bottom: 8px;
+    }
+
+    .pred-desc { font-size: 13px; color: var(--sub); margin-bottom: 16px; line-height: 1.5; }
+
+    .pred-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px;
+    }
+
+    .pred-stats { display: flex; gap: 16px; }
+    .pred-stat { font-size: 12px; color: var(--muted); }
+    .pred-stat strong { color: var(--sub); font-weight: 500; }
+
+    .vote-row { display: flex; gap: 8px; }
+    .vote-btn {
+      padding: 9px 20px; border-radius: 9px; border: 1px solid var(--border);
+      background: var(--raised); color: var(--sub);
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .vote-btn:hover { transform: translateY(-1px); }
+    .vote-btn.yes:hover { background: rgba(87,255,168,0.12); border-color: rgba(87,255,168,0.4); color: var(--green); }
+    .vote-btn.no:hover  { background: rgba(255,107,107,0.1);  border-color: rgba(255,107,107,0.4); color: var(--red); }
+    .vote-btn.voted-yes { background: rgba(87,255,168,0.12); border-color: rgba(87,255,168,0.5); color: var(--green); }
+    .vote-btn.voted-no  { background: rgba(255,107,107,0.1);  border-color: rgba(255,107,107,0.5); color: var(--red); }
+    .vote-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Stake wager row */
+    .wager-row {
+      display: flex; align-items: center; gap: 8px; margin-top: 12px;
+      padding-top: 12px; border-top: 1px solid var(--border);
+    }
+    .wager-input {
+      flex: 1; background: var(--raised); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px;
+      color: var(--text); font-family: 'Outfit', sans-serif; font-size: 14px;
+      outline: none; transition: border-color 0.2s;
+    }
+    .wager-input::placeholder { color: var(--muted); }
+    .wager-input:focus { border-color: rgba(232,255,87,0.3); }
+    .wager-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+    /* ── LEADERBOARD ── */
+    .lb-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; margin-bottom: 32px;
+      animation: fadeUp 0.45s 0.25s ease both;
+    }
+    .lb-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .lb-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+    .lb-sub { font-size: 12px; color: var(--muted); }
+
+    .lb-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 20px; border-bottom: 1px solid rgba(255,255,255,0.03);
+      transition: background 0.15s;
+    }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row:hover { background: var(--raised); }
+    .lb-row.me { background: rgba(232,255,87,0.04); }
+
+    .lb-rank {
+      width: 24px; text-align: center; font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700; color: var(--muted); flex-shrink: 0;
+    }
+    .lb-rank.gold   { color: #ffd700; }
+    .lb-rank.silver { color: #c0c0c0; }
+    .lb-rank.bronze { color: #cd7f32; }
+
+    .lb-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #080b12;
+    }
+
+    .lb-name { flex: 1; font-size: 14px; font-weight: 500; }
+    .lb-name .you { font-size: 11px; color: var(--accent); margin-left: 6px; }
+
+    .lb-stats { text-align: right; }
+    .lb-bal { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--accent); }
+    .lb-wr  { font-size: 11px; color: var(--muted); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 18px;
+      font-size: 13px; font-weight: 500; color: var(--text);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 9999;
+      transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+      white-space: nowrap; pointer-events: none;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.win  { color: var(--green); border-color: rgba(87,255,168,0.3); }
+    #toast.loss { color: var(--red); border-color: rgba(255,107,107,0.3); }
+    #toast.info { color: var(--accent); border-color: rgba(232,255,87,0.3); }
+
+    /* Empty state */
+    .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+
+    .hidden { display: none !important; }
+
+    /* Skeleton */
+    .skel {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--raised) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px; height: 14px; margin-bottom: 8px;
+    }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    /* Divider */
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+    /* Mobile safe */
+    @media (max-width: 480px) {
+      .pred-footer { flex-direction: column; align-items: flex-start; }
+      .vote-row { width: 100%; }
+      .vote-btn { flex: 1; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div id="toast"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="logo">⚡ Prophet<span>ly</span></div>
+  <div class="nav-right">
+    <div class="balance-pill">💰 <span class="amt" id="navBalance">$0</span></div>
+    <div class="avatar" id="avatarBtn">
+      <span id="avatarInitial">?</span>
+      <div class="avatar-menu" id="avatarMenu">
+        <a href="dashboard.html">📊 My Stats</a>
+        <button id="logoutBtn" class="danger">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<main>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-date" id="heroDate">—</div>
+    <div class="hero-title">Today's <em>Predictions</em></div>
+  </div>
+
+  <!-- Category filter -->
+  <div class="cat-row" id="catRow">
+    <button class="cat-btn active" data-cat="all">All 🔥</button>
+    <button class="cat-btn" data-cat="weather">Weather 🌤️</button>
+    <button class="cat-btn" data-cat="sports">Sports 🏀</button>
+    <button class="cat-btn" data-cat="finance">Finance 📈</button>
+    <button class="cat-btn" data-cat="tech">Tech 💻</button>
+    <button class="cat-btn" data-cat="dumb">Dumb Stuff 💀</button>
+  </div>
+
+  <!-- Predictions list -->
+  <div class="section-label">LIVE NOW</div>
+  <div class="predictions" id="predList"></div>
+
+  <hr class="section-divider" />
+
+  <!-- Leaderboard -->
+  <div class="section-label">LEADERBOARD</div>
+  <div class="lb-card">
+    <div class="lb-header">
+      <div class="lb-title">Top Prophets</div>
+      <div class="lb-sub">All time</div>
+    </div>
+    <div id="lbList"></div>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════ SCRIPT ══════════════════════════ -->
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  const supabase = createClient(
+    "https://yjeedgcveawterfpvnuc.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqZWVkZ2N2ZWF3dGVyZnB2bnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzU3MjYsImV4cCI6MjA5MjAxMTcyNn0.nAcKJcUjVZW8-qrPm3n9XDvoqUm4jcD3srZwJkPuUBU",
+    { auth: { persistSession: true, autoRefreshToken: true } }
+  );
+
+  // ── Auth guard ──
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.replace("login.html"); }
+  const user = session.user;
+
+  // ── Profile ──
+  let profile = null;
+  async function loadProfile() {
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (!data) {
+      // Create profile if missing
+      const { data: created } = await supabase
+        .from("profiles")
+        .upsert({ id: user.id, email: user.email, balance: 1000, streak: 0, total_picks: 0, correct_picks: 0 })
+        .select().single();
+      profile = created;
+    } else {
+      profile = data;
+    }
+    updateNavBalance();
+  }
+
+  function updateNavBalance() {
+    if (!profile) return;
+    document.getElementById("navBalance").textContent = "$" + Number(profile.balance).toLocaleString();
+  }
+
+  // ── Avatar ──
+  const initial = (user.email || "?")[0].toUpperCase();
+  document.getElementById("avatarInitial").textContent = initial;
+
+  document.getElementById("avatarBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    document.getElementById("avatarMenu").classList.toggle("open");
+  });
+  document.addEventListener("click", () => document.getElementById("avatarMenu").classList.remove("open"));
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.replace("login.html");
+  });
+
+  // ── Date ──
+  document.getElementById("heroDate").textContent = new Date().toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric"
+  });
+
+  // ── Toast ──
+  const toastEl = document.getElementById("toast");
+  let toastTimer;
+  function showToast(msg, type = "") {
+    toastEl.className = type;
+    toastEl.textContent = msg;
+    void toastEl.offsetWidth;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 3000);
+  }
+
+  // ── Prediction data (seeded — replace with real Supabase table later) ──
+  const PREDICTIONS = [
+    {
+      id: "p1", category: "weather",
+      question: "Will it rain in NYC today?",
+      desc: "Based on current forecasts, will NYC see measurable precipitation before midnight?",
+      yes_pct: 62, total_bets: 1847, closes_in: "4h 20m", multiplier: "1.6x"
+    },
+    {
+      id: "p2", category: "sports",
+      question: "Will the Lakers win tonight?",
+      desc: "Lakers vs Celtics — Western vs Eastern showdown. LeBron questionable.",
+      yes_pct: 45, total_bets: 3204, closes_in: "6h", multiplier: "2.2x"
+    },
+    {
+      id: "p3", category: "dumb",
+      question: "Will Elon tweet something wild before noon?",
+      desc: "Historically he does this like 80% of days. You know the deal.",
+      yes_pct: 81, total_bets: 9102, closes_in: "2h 45m", multiplier: "1.2x"
+    },
+    {
+      id: "p4", category: "finance",
+      question: "Will BTC close above $70k today?",
+      desc: "Bitcoin is trading near resistance. Bulls vs bears going head to head.",
+      yes_pct: 38, total_bets: 5670, closes_in: "8h", multiplier: "2.6x"
+    },
+    {
+      id: "p5", category: "tech",
+      question: "Will Apple announce something at WWDC this week?",
+      desc: "Leaks suggest a major AI announcement. Will it actually happen?",
+      yes_pct: 73, total_bets: 2100, closes_in: "3d", multiplier: "1.4x"
+    },
+    {
+      id: "p6", category: "dumb",
+      question: "Will someone leave a 1-star review for a 5-star restaurant today?",
+      desc: "Some guy named Gary always does this. It's basically clockwork at this point. 💀",
+      yes_pct: 92, total_bets: 422, closes_in: "12h", multiplier: "1.08x"
+    },
+    {
+      id: "p7", category: "sports",
+      question: "Will there be a walk-off home run in MLB today?",
+      desc: "Any game counts. Just needs to be a walk-off homer in the 9th or later.",
+      yes_pct: 29, total_bets: 1388, closes_in: "10h", multiplier: "3.4x"
+    },
+    {
+      id: "p8", category: "weather",
+      question: "Will it snow anywhere in Florida today?",
+      desc: "All 67 Florida counties count. Even the panhandle.",
+      yes_pct: 3, total_bets: 887, closes_in: "12h", multiplier: "33x"
+    }
+  ];
+
+  // Load user's existing votes from localStorage (replace with Supabase `votes` table later)
+  const votesKey = `prophetly_votes_${user.id}`;
+  let myVotes = JSON.parse(localStorage.getItem(votesKey) || "{}"); // { predId: 'yes'|'no' }
+  let myWagers = JSON.parse(localStorage.getItem(votesKey + "_w") || "{}"); // { predId: amount }
+
+  // ── Active category ──
+  let activeCategory = "all";
+
+  function getCatClass(cat) {
+    return { weather: "cat-weather", sports: "cat-sports", dumb: "cat-dumb", finance: "cat-finance", tech: "cat-tech" }[cat] || "cat-dumb";
+  }
+  function getCatLabel(cat) {
+    return { weather: "Weather 🌤️", sports: "Sports 🏀", dumb: "Dumb Stuff 💀", finance: "Finance 📈", tech: "Tech 💻" }[cat] || cat;
+  }
+
+  function renderPredictions() {
+    const list = document.getElementById("predList");
+    const filtered = activeCategory === "all" ? PREDICTIONS : PREDICTIONS.filter(p => p.category === activeCategory);
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="empty">Nothing in this category yet 💀</div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map((p, i) => {
+      const myVote = myVotes[p.id];
+      const wager  = myWagers[p.id] || "";
+      const yesActive = myVote === "yes" ? "voted-yes" : "yes";
+      const noActive  = myVote === "no"  ? "voted-no"  : "no";
+      const disAttr   = myVote ? "disabled" : "";
+
+      return `
+      <div class="pred-card" style="animation-delay:${i * 0.05}s" id="card-${p.id}">
+        <div class="pred-meta">
+          <span class="pred-cat ${getCatClass(p.category)}">${getCatLabel(p.category)}</span>
+          <span class="pred-odds">Multiplier: <strong>${p.multiplier}</strong></span>
+        </div>
+        <div class="pred-question">${p.question}</div>
+        <div class="pred-desc">${p.desc}</div>
+        <div class="pred-footer">
+          <div class="pred-stats">
+            <div class="pred-stat">👥 <strong>${p.total_bets.toLocaleString()}</strong> bets</div>
+            <div class="pred-stat">🕐 <strong>${p.closes_in}</strong> left</div>
+            <div class="pred-stat">✅ ${p.yes_pct}% yes</div>
+          </div>
+          <div class="vote-row">
+            <button class="vote-btn ${yesActive}" data-id="${p.id}" data-vote="yes" ${disAttr}>✅ YES</button>
+            <button class="vote-btn ${noActive}"  data-id="${p.id}" data-vote="no"  ${disAttr}>❌ NO</button>
+          </div>
+        </div>
+        ${myVote ? "" : `
+        <div class="wager-row">
+          <span class="wager-label">Wager:</span>
+          <input class="wager-input" type="number" min="1" max="${profile?.balance || 1000}"
+            placeholder="Enter amount ($)" id="wager-${p.id}" value="${wager}" />
+        </div>`}
+        ${myVote ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;color:var(--muted)">
+          You voted <strong style="color:${myVote==='yes'?'var(--green)':'var(--red)'}">
+          ${myVote.toUpperCase()}</strong>${myWagers[p.id] ? ` · Wagered <strong style="color:var(--accent)">$${myWagers[p.id]}</strong>` : ""}
+        </div>` : ""}
+      </div>`;
+    }).join("");
+
+    // Vote button listeners
+    list.querySelectorAll(".vote-btn:not([disabled])").forEach(btn => {
+      btn.addEventListener("click", () => handleVote(btn.dataset.id, btn.dataset.vote));
+    });
+  }
+
+  async function handleVote(predId, vote) {
+    if (!profile) return;
+    const wagerInput = document.getElementById(`wager-${predId}`);
+    const wager = wagerInput ? parseInt(wagerInput.value) || 0 : 0;
+
+    if (wager > profile.balance) {
+      showToast("Not enough balance! 💀", "loss"); return;
+    }
+    if (wager < 0) {
+      showToast("Invalid wager.", "loss"); return;
+    }
+
+    myVotes[predId]  = vote;
+    myWagers[predId] = wager || null;
+    localStorage.setItem(votesKey, JSON.stringify(myVotes));
+    localStorage.setItem(votesKey + "_w", JSON.stringify(myWagers));
+
+    // Deduct wager from balance
+    if (wager > 0 && profile) {
+      profile.balance -= wager;
+      await supabase.from("profiles").update({
+        balance: profile.balance,
+        total_picks: (profile.total_picks || 0) + 1
+      }).eq("id", user.id);
+      updateNavBalance();
+    }
+
+    showToast(
+      vote === "yes" ? `✅ Voted YES${wager ? ` · $${wager} wagered` : ""}` : `❌ Voted NO${wager ? ` · $${wager} wagered` : ""}`,
+      vote === "yes" ? "win" : "loss"
+    );
+    renderPredictions();
+  }
+
+  // ── Category filter ──
+  document.getElementById("catRow").addEventListener("click", (e) => {
+    const btn = e.target.closest(".cat-btn");
+    if (!btn) return;
+    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeCategory = btn.dataset.cat;
+    renderPredictions();
+  });
+
+  // ── Leaderboard ──
+  async function loadLeaderboard() {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, email, balance, total_picks, correct_picks")
+      .order("balance", { ascending: false })
+      .limit(10);
+
+    const lbList = document.getElementById("lbList");
+    const users  = data || [];
+
+    // Fill with dummy data if empty
+    const DUMMY = [
+      { id: "d1", email: "shadow@prophetly.io", balance: 14200, total_picks: 88, correct_picks: 62 },
+      { id: "d2", email: "oracle_x@email.com",  balance: 11800, total_picks: 74, correct_picks: 51 },
+      { id: "d3", email: "vibe_check@mail.com", balance: 9400,  total_picks: 60, correct_picks: 39 },
+      { id: "d4", email: "guesswho@email.com",  balance: 7700,  total_picks: 55, correct_picks: 33 },
+      { id: "d5", email: "luck99@web.io",        balance: 5100,  total_picks: 40, correct_picks: 22 },
+    ];
+    const merged = [...users, ...DUMMY].slice(0, 8);
+
+    const colors = ["#e8ff57","#57ffa8","#57a8ff","#ff6b6b","#c57fff","#ffb857","#57e8ff","#ff57b8"];
+    const rankClass = (i) => i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
+
+    lbList.innerHTML = merged.map((u, i) => {
+      const isMe = u.id === user.id;
+      const name = u.email ? u.email.split("@")[0] : "anon";
+      const wr   = u.total_picks ? Math.round((u.correct_picks / u.total_picks) * 100) : "—";
+      return `
+      <div class="lb-row ${isMe ? "me" : ""}">
+        <div class="lb-rank ${rankClass(i)}">${i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i+1}`}</div>
+        <div class="lb-avatar" style="background:${colors[i % colors.length]}">${name[0].toUpperCase()}</div>
+        <div class="lb-name">${name}${isMe ? '<span class="you">YOU</span>' : ""}</div>
+        <div class="lb-stats">
+          <div class="lb-bal">$${Number(u.balance).toLocaleString()}</div>
+          <div class="lb-wr">${wr}% win rate</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // ── Init ──
+  await loadProfile();
+  renderPredictions();
+  await loadLeaderboard();
+</script>
+</body>
+</html>
