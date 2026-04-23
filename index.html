@@ -438,56 +438,21 @@
   }
 
   // ── Prediction data (seeded — replace with real Supabase table later) ──
-  const PREDICTIONS = [
-    {
-      id: "p1", category: "weather",
-      question: "Will it rain in NYC today?",
-      desc: "Based on current forecasts, will NYC see measurable precipitation before midnight?",
-      yes_pct: 62, total_bets: 1847, closes_in: "4h 20m", multiplier: "1.6x"
-    },
-    {
-      id: "p2", category: "sports",
-      question: "Will the Lakers win tonight?",
-      desc: "Lakers vs Celtics — Western vs Eastern showdown. LeBron questionable.",
-      yes_pct: 45, total_bets: 3204, closes_in: "6h", multiplier: "2.2x"
-    },
-    {
-      id: "p3", category: "dumb",
-      question: "Will Elon tweet something wild before noon?",
-      desc: "Historically he does this like 80% of days. You know the deal.",
-      yes_pct: 81, total_bets: 9102, closes_in: "2h 45m", multiplier: "1.2x"
-    },
-    {
-      id: "p4", category: "finance",
-      question: "Will BTC close above $70k today?",
-      desc: "Bitcoin is trading near resistance. Bulls vs bears going head to head.",
-      yes_pct: 38, total_bets: 5670, closes_in: "8h", multiplier: "2.6x"
-    },
-    {
-      id: "p5", category: "tech",
-      question: "Will Apple announce something at WWDC this week?",
-      desc: "Leaks suggest a major AI announcement. Will it actually happen?",
-      yes_pct: 73, total_bets: 2100, closes_in: "3d", multiplier: "1.4x"
-    },
-    {
-      id: "p6", category: "dumb",
-      question: "Will someone leave a 1-star review for a 5-star restaurant today?",
-      desc: "Some guy named Gary always does this. It's basically clockwork at this point. 💀",
-      yes_pct: 92, total_bets: 422, closes_in: "12h", multiplier: "1.08x"
-    },
-    {
-      id: "p7", category: "sports",
-      question: "Will there be a walk-off home run in MLB today?",
-      desc: "Any game counts. Just needs to be a walk-off homer in the 9th or later.",
-      yes_pct: 29, total_bets: 1388, closes_in: "10h", multiplier: "3.4x"
-    },
-    {
-      id: "p8", category: "weather",
-      question: "Will it snow anywhere in Florida today?",
-      desc: "All 67 Florida counties count. Even the panhandle.",
-      yes_pct: 3, total_bets: 887, closes_in: "12h", multiplier: "33x"
-    }
-  ];
+ let PREDICTIONS = [];
+
+async function loadPredictions() {
+  const { data, error } = await supabase
+    .from("predictions")
+    .select("*");
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  PREDICTIONS = data;
+  renderPredictions(); // ✅ THIS is what you want
+}
 
   // Load user's existing votes from localStorage (replace with Supabase `votes` table later)
   const votesKey = `prophetly_votes_${user.id}`;
@@ -645,7 +610,7 @@
 
   // ── Init ──
   await loadProfile();
-  renderPredictions();
+  await loadPredictions();
   await loadLeaderboard();
 </script>
 </body>
