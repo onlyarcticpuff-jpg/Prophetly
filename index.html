@@ -557,19 +557,17 @@ let myWagers = {};
     return;
   }
 
-  const wagerInput = document.getElementById(`wager-${predId}`);
-  const wager = wagerInput ? parseInt(wagerInput.value) || 0 : 0;
+  const wager = Number(wagerInput?.value);
 
-  if (wager > profile.balance) {
-    showToast("Not enough balance! 💀", "loss");
-    return;
+if (!wager || wager <= 0) {
+  showToast("Enter a real amount bro 💀");
+  return;
+}
+
+if (wager > profile.balance) {
+  showToast("Not enough balance! 💀", "loss");
+  return;
   }
-
-  if (wager < 0) {
-    showToast("Invalid wager.", "loss");
-    return;
-  }
-
   // 👉 FIRST: save to DB
   const { error } = await supabase.from("bets").insert({
     user_id: user.id,
