@@ -455,9 +455,24 @@ async function loadPredictions() {
 }
 
   // Load user's existing votes from localStorage (replace with Supabase `votes` table later)
-  const votesKey = `prophetly_votes_${user.id}`;
-  let myVotes = JSON.parse(localStorage.getItem(votesKey) || "{}"); // { predId: 'yes'|'no' }
-  let myWagers = JSON.parse(localStorage.getItem(votesKey + "_w") || "{}"); // { predId: amount }
+  let myVotes = {};
+let myWagers = {};
+  async function loadMyBets() {
+  const { data, error } = await supabase
+    .from("bets")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  data.forEach(b => {
+    myVotes[b.prediction_id] = b.choice;
+    myWagers[b.prediction_id] = b.amount;
+  });
+  }
 
   // ── Active category ──
   let activeCategory = "all";
@@ -523,39 +538,65 @@ async function loadPredictions() {
     });
   }
 
-  async function handleVote(predId, vote) {
-    if (!profile) return;
-    const wagerInput = document.getElementById(`wager-${predId}`);
-    const wager = wagerInput ? parseInt(wagerInput.value) || 0 : 0;
+ async function handleVote(predId, vote) {
+  if (!profile) return;
 
-    if (wager > profile.balance) {
-      showToast("Not enough balance! 💀", "loss"); return;
-    }
-    if (wager < 0) {
-      showToast("Invalid wager.", "loss"); return;
-    }
-
-    myVotes[predId]  = vote;
-    myWagers[predId] = wager || null;
-    localStorage.setItem(votesKey, JSON.stringify(myVotes));
-    localStorage.setItem(votesKey + "_w", JSON.stringify(myWagers));
-
-    // Deduct wager from balance
-    if (wager > 0 && profile) {
-      profile.balance -= wager;
-      await supabase.from("profiles").update({
-        balance: profile.balance,
-        total_picks: (profile.total_picks || 0) + 1
-      }).eq("id", user.id);
-      updateNavBalance();
-    }
-
-    showToast(
-      vote === "yes" ? `✅ Voted YES${wager ? ` · $${wager} wagered` : ""}` : `❌ Voted NO${wager ? ` · $${wager} wagered` : ""}`,
-      vote === "yes" ? "win" : "loss"
-    );
-    renderPredictions();
+  if (myVotes[predId]) {
+    showToast("You already voted on this 💀");
+    return;
   }
+
+  const wagerInput = document.getElementById(`wager-${predId}`);
+  const wager = wagerInput ? parseInt(wagerInput.value) || 0 : 0;
+
+  if (wager > profile.balance) {
+    showToast("Not enough balance! 💀", "loss");
+    return;
+  }
+
+  if (wager < 0) {
+    showToast("Invalid wager.", "loss");
+    return;
+  }
+
+  // 👉 FIRST: save to DB
+  const { error } = await supabase.from("bets").insert({
+    user_id: user.id,
+    prediction_id: predId,
+    choice: vote,
+    amount: wager || 0
+  });
+
+  if (error) {
+    console.error(error);
+    showToast("Bet failed 💀");
+    return;
+  }
+
+  // 👉 THEN: update UI state
+  myVotes[predId]  = vote;
+  myWagers[predId] = wager || null;
+
+  // 👉 update balance
+  if (wager > 0) {
+    profile.balance -= wager;
+
+    await supabase.from("profiles").update({
+      balance: profile.balance,
+      total_picks: (profile.total_picks || 0) + 1
+    }).eq("id", user.id);
+
+    updateNavBalance();
+  }
+
+  showToast(
+    vote === "yes"
+      ? `✅ Voted YES${wager ? ` · $${wager}` : ""}`
+      : `❌ Voted NO${wager ? ` · $${wager}` : ""}`
+  );
+
+  renderPredictions();
+ }
 
   // ── Category filter ──
   document.getElementById("catRow").addEventListener("click", (e) => {
@@ -610,8 +651,9 @@ async function loadPredictions() {
 
   // ── Init ──
   await loadProfile();
-  await loadPredictions();
-  await loadLeaderboard();
+await loadMyBets(); // 👈 THIS
+await loadPredictions();
+await loadLeaderboard();
 </script>
 </body>
 </html>
