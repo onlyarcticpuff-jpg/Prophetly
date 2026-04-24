@@ -750,10 +750,6 @@ async function placeBet(predId) {
   }
 
   /* ══════ GLOBAL CHAT ══════
-<!-- REAL-TIME UPGRADE (Production Ready) -->
-<script>
-// 1. Create table (run once in Supabase SQL Editor):
-/*
 CREATE TABLE chat_messages (
   id BIGSERIAL PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -1003,8 +999,9 @@ function initRealtimeChat() {
     }
   )
   .subscribe((status) => {
-    console.log('Chat subscription status:', status);
-  });
+  console.log('Chat subscription status:', status);
+});
+}
 
 // ====================== INITIALIZE ======================
 
