@@ -551,8 +551,8 @@
             <div class="wager-top">
               <span class="wager-label">Wager:</span>
               <input class="wager-input" id="wager-${p.id}" type="number" min="0" max="${bal}"
-                placeholder="Enter amount ($)" oninput="updatePayout('${p.id}')"
-              <div class="wager-quick">
+  placeholder="Enter amount ($)" oninput="updatePayout('${p.id}')" />
+        <div class="wager-quick">
                 <button onclick="quickSet('${p.id}',50)">$50</button>
                 <button onclick="quickSet('${p.id}',100)">$100</button>
                 <button onclick="quickSet('${p.id}',${bal})">MAX</button>
@@ -629,11 +629,6 @@
     ? "$" + Math.floor(amt * mult).toLocaleString()
     : "$—";
 };
-    const el = document.getElementById(`payout-${id}`);
-    const inp = document.getElementById(`wager-${id}`); if (!el || !inp) return;
-    const amt = parseInt(inp.value) || 0;
-    el.textContent = amt > 0 ? "$" + Math.floor(amt * mult).toLocaleString() : "$—";
-  };
 
   /* PLACE BET */
   async function placeBet(predId) {
