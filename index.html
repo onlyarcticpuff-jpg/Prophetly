@@ -527,8 +527,8 @@
           <div class="pred-question">${p.question}</div>
           <div class="pred-desc">${p.desc}</div>
           <div class="pred-stats">
-            <span class="pred-stat"><img src="/assets/icons/message-circle.svg" class="stat-icon"> <strong>${Number(p.total_bets).toLocaleString()}</strong> bets</span>
-            <span class="pred-stat"><img src="/assets/icons/bolt.svg" class="stat-icon"> <strong>${
+            <span class="pred-stat"><img src="/assets/icons/user.svg" class="stat-icon"> <strong>${Number(p.total_bets).toLocaleString()}</strong> bets</span>
+            <span class="pred-stat"><img src="/assets/icons/hourglass.svg" class="stat-icon"> <strong>${
  p.closes_at
     ? (() => {
         const diff = new Date(p.closes_at) - new Date();
