@@ -551,7 +551,7 @@
             <div class="wager-top">
               <span class="wager-label">Wager:</span>
               <input class="wager-input" id="wager-${p.id}" type="number" min="0" max="${bal}"
-                placeholder="Enter amount ($)" oninput="updatePayout('${p.id}',${p.multiplier})" />
+                placeholder="Enter amount ($)" oninput="updatePayout('${p.id}')"
               <div class="wager-quick">
                 <button onclick="quickSet('${p.id}',50)">$50</button>
                 <button onclick="quickSet('${p.id}',100)">$100</button>
@@ -606,7 +606,29 @@
     el.value = Math.min(amt, profile?.balance ?? 0);
     const p = PREDICTIONS.find(x => x.id === id); if (p) updatePayout(id, p.multiplier);
   };
-  window.updatePayout = (id, mult) => {
+  window.updatePayout = (id) => {
+  const el = document.getElementById(`payout-${id}`);
+  const inp = document.getElementById(`wager-${id}`);
+  if (!el || !inp) return;
+
+  const amt = parseInt(inp.value) || 0;
+  const p = PREDICTIONS.find(x => x.id === id);
+  const choice = pendingChoice[id];
+
+  if (!choice || !p) {
+    el.textContent = "$—";
+    return;
+  }
+
+  const mult =
+    choice === "yes"
+      ? (p.yes_multiplier ?? p.multiplier)
+      : (p.no_multiplier ?? 1.3); // fallback
+
+  el.textContent = amt > 0
+    ? "$" + Math.floor(amt * mult).toLocaleString()
+    : "$—";
+};
     const el = document.getElementById(`payout-${id}`);
     const inp = document.getElementById(`wager-${id}`); if (!el || !inp) return;
     const amt = parseInt(inp.value) || 0;
@@ -635,7 +657,10 @@
     const pred = PREDICTIONS.find(p => p.id === predId);
     const { error } = await supabase.from("bets").insert({
       user_id: user.id, prediction_id: predId,
-      choice, amount, multiplier: pred?.multiplier ?? 1
+      choice, amount, multiplier:
+  choice === "yes"
+    ? (pred?.yes_multiplier ?? pred?.multiplier ?? 1)
+    : (pred?.no_multiplier ?? 1.3)
     });
 
     if (error) {
@@ -666,7 +691,12 @@
 
     /* UI feedback */
     renderBalance(true);
-    const pot = Math.floor(amount * (pred?.multiplier ?? 1));
+    const mult =
+  choice === "yes"
+    ? (pred?.yes_multiplier ?? pred?.multiplier ?? 1)
+    : (pred?.no_multiplier ?? 1.3);
+
+const pot = Math.floor(amount * mult);
     showToast(
       choice === "yes"
         ? `✅ YES locked! $${amount} wagered → up to $${pot.toLocaleString()}`
