@@ -279,12 +279,12 @@
   <div class="nav-right">
     <div class="balance-pill" id="balancePill">
       <span class="nav-balance">
-  <img src="assets/icons/wallet.svg" class="icon">
+  <img src="/assets/icons/wallet.svg" class="icon">
   <span class="amt" id="navBalance">—</span>
       </span>
     </div>
     <div class="chat-toggle-btn" id="chatToggleBtn" title="Global Chat">
-      <img src="assets/icons/message-circle.svg" width="16"><span class="chat-dot"></span>
+      <img src="/assets/icons/message-circle.svg" width="16"><span class="chat-dot"></span>
     </div>
     <div class="avatar" id="avatarBtn">
       <span id="avatarInitial">?</span>
@@ -464,7 +464,7 @@
   function renderPredictions() {
     const list = document.getElementById("predList");
     const show = activeCat === "all" ? PREDICTIONS : PREDICTIONS.filter(p => p.category === activeCat);
-    if (!show.length) { list.innerHTML = `<div class="empty">Nothing here yet 💀</div>`; return; }
+    if (!show.length) { list.innerHTML = `<div class="empty">Nothing here yet</div>`; return; }
 
     list.innerHTML = show.map((p, i) => {
       const bet    = myBets[p.id];
@@ -498,8 +498,8 @@
           </div>
           ${!voted ? `
           <div class="vote-row">
-            <button class="vote-btn yes${choice==="yes"?" selected-yes":""}" data-id="${p.id}" data-vote="yes"><img src="assets/icons/circle-check.svg" YES</button>
-            <button class="vote-btn no${choice==="no"?" selected-no":""}"   data-id="${p.id}" data-vote="no"><img src="assets/icons/x.svg" width="14"> NO</button>
+            <button class="vote-btn yes${choice==="yes"?" selected-yes":""}" data-id="${p.id}" data-vote="yes"><img src="/assets/icons/circle-check.svg" YES</button>
+            <button class="vote-btn no${choice==="no"?" selected-no":""}"   data-id="${p.id}" data-vote="no"><img src="/assets/icons/x.svg" width="14"> NO</button>
           </div>
           <div class="wager-section${choice?"":" hidden"}" id="wager-section-${p.id}">
             <div class="wager-top">
