@@ -961,9 +961,8 @@ function initRealtimeChat() {
         const newMsg = payload.new;
         // Avoid duplicate if we just sent it
         if (!chatLog.some(m => m.id === newMsg.id)) {
-          chatLog.push(newMsg);
           if (chatPanel.classList.contains("open")) {
-            appendMsg(newMsg);
+          
           }
         }
       }
