@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prophetly — Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080b12;
+      --surface: #0e1420;
+      --raised:  #131a28;
+      --border:  rgba(255,255,255,0.06);
+      --accent:  #e8ff57;
+      --green:   #57ffa8;
+      --red:     #ff6b6b;
+      --blue:    #57a8ff;
+      --text:    #f0f2f8;
+      --muted:   #4a5568;
+      --sub:     #8892a4;
+    }
+
+    html { height: 100%; }
+    body {
+      min-height: 100%; background: var(--bg); color: var(--text);
+      font-family: 'Outfit', sans-serif; padding-bottom: 48px;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,11,18,0.85); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px; height: 60px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .back-btn {
+      background: var(--raised); border: 1px solid var(--border);
+      border-radius: 9px; padding: 7px 13px;
+      color: var(--sub); font-family: 'Outfit', sans-serif;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      text-decoration: none; display: flex; align-items: center; gap: 6px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .back-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+    .nav-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+
+    main { max-width: 680px; margin: 0 auto; padding: 28px 18px 0; position: relative; z-index: 1; }
+
+    /* Profile hero */
+    .profile-hero {
+      display: flex; align-items: center; gap: 18px;
+      margin-bottom: 28px; animation: fadeUp 0.4s ease both;
+    }
+    .profile-avatar {
+      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), #57ffa8);
+      display: grid; place-items: center;
+      font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #080b12;
+      box-shadow: 0 0 30px rgba(232,255,87,0.2);
+    }
+    .profile-info .name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+    .profile-info .email { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .profile-info .joined { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Stat grid */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+      margin-bottom: 24px; animation: fadeUp 0.4s 0.06s ease both;
+    }
+    @media(min-width: 500px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .stat-tile {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 16px;
+    }
+    .stat-tile .label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .stat-tile .value { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; }
+    .stat-tile .value.accent { color: var(--accent); }
+    .stat-tile .value.green  { color: var(--green); }
+    .stat-tile .value.blue   { color: var(--blue); }
+    .stat-tile .sub { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+    .stat-tile .sub svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+    /* Section */
+    .section { margin-bottom: 28px; animation: fadeUp 0.4s 0.12s ease both; }
+    .section-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+    .section-count { font-size: 12px; color: var(--muted); }
+
+    /* Rakeback / Bonus cards */
+    .reward-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    }
+    @media(max-width: 420px) { .reward-grid { grid-template-columns: 1fr; } }
+
+    .reward-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .reward-card.rakeback { border-color: rgba(87,168,255,0.2); }
+    .reward-card.bonus    { border-color: rgba(232,255,87,0.18); }
+
+    .reward-top {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .reward-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 5px;
+    }
+    .reward-badge.rb { background: rgba(87,168,255,0.12); color: var(--blue); }
+    .reward-badge.bo { background: rgba(232,255,87,0.1); color: var(--accent); }
+
+    .reward-amount {
+      font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800;
+    }
+    .reward-amount.rb { color: var(--blue); }
+    .reward-amount.bo { color: var(--accent); }
+
+    .reward-sub { font-size: 11px; color: var(--muted); }
+
+    .reward-claim-btn {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      padding: 7px 0; width: 100%; font-family: 'Outfit', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .reward-claim-btn.rb {
+      color: var(--blue); border-color: rgba(87,168,255,0.25);
+    }
+    .reward-claim-btn.rb:hover { background: rgba(87,168,255,0.08); border-color: var(--blue); }
+    .reward-claim-btn.bo {
+      color: var(--accent); border-color: rgba(232,255,87,0.25);
+    }
+    .reward-claim-btn.bo:hover { background: rgba(232,255,87,0.07); border-color: var(--accent); }
+    .reward-claim-btn:disabled {
+      opacity: 0.4; cursor: not-allowed;
+    }
+
+    /* Recent bets list */
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-row {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .history-outcome {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      display: grid; place-items: center; font-size: 14px;
+    }
+    .history-outcome.win  { background: rgba(87,255,168,0.1); }
+    .history-outcome.loss { background: rgba(255,107,107,0.08); }
+    .history-outcome.open { background: rgba(232,255,87,0.08); }
+    .history-outcome svg  { width: 15px; height: 15px; }
+
+    .history-q { flex: 1; font-size: 13px; font-weight: 500; line-height: 1.3; }
+    .history-q .history-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .history-amt { text-align: right; flex-shrink: 0; }
+    .history-amt .amt-val { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+    .history-amt .amt-val.pos { color: var(--green); }
+    .history-amt .amt-val.neg { color: var(--red); }
+    .history-amt .amt-val.neu { color: var(--muted); }
+    .history-amt .amt-sub { font-size: 11px; color: var(--muted); }
+
+    /* Settings card */
+    .settings-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 14px;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row .row-label { color: var(--sub); }
+    .settings-row .row-val { color: var(--text); font-weight: 500; }
+    .settings-row button {
+      background: none; border: none; cursor: pointer;
+      font-family: 'Outfit', sans-serif; font-size: 13px;
+      font-weight: 500; padding: 6px 12px; border-radius: 7px;
+      transition: background 0.2s;
+    }
+    .settings-row .btn-ghost { color: var(--sub); }
+    .settings-row .btn-ghost:hover { background: var(--raised); color: var(--text); }
+    .settings-row .btn-danger { color: var(--red); }
+    .settings-row .btn-danger:hover { background: rgba(255,107,107,0.08); }
+
+    .empty { text-align: center; padding: 30px; color: var(--muted); font-size: 14px; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--raised); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 20px; font-size: 13px; font-weight: 500; color: var(--text);
+      opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
+      z-index: 999; white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="back-btn" href="index.html">← Back to Game</a>
+  <div class="nav-title">My Stats</div>
+</nav>
+
+<main>
+
+  <!-- Profile -->
+  <div class="profile-hero">
+    <div class="profile-avatar" id="dashAvatar">?</div>
+    <div class="profile-info">
+      <div class="name" id="dashName">Loading…</div>
+      <div class="email" id="dashEmail">—</div>
+      <div class="joined" id="dashJoined">—</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid">
+    <div class="stat-tile">
+      <div class="label">Balance</div>
+      <div class="value accent" id="dashBalance">—</div>
+      <div class="sub">current</div>
+    </div>
+    <div class="stat-tile">
+      <div class="label">Win Rate</div>
+      <div class="value green" id="dashWR">—</div>
+      <div class="sub">of all picks</div>
+    </div>
+    <div class="stat-tile">
+      <div class="label">Total Picks</div>
+      <div class="value" id="dashPicks">—</div>
+      <div class="sub">all time</div>
+    </div>
+    <div class="stat-tile">
+      <div class="label">Streak</div>
+      <div class="value blue" id="dashStreak">—</div>
+      <div class="sub" id="streakSub">
+        <!-- flame icon injected by JS -->
+        current
+      </div>
+    </div>
+  </div>
+
+  <!-- Rakeback & Bonuses -->
+  <div class="section" style="animation-delay:0.10s">
+    <div class="section-hd">
+      <div class="section-title">Rewards</div>
+    </div>
+    <div class="reward-grid">
+
+      <!-- Rakeback -->
+      <div class="reward-card rakeback">
+        <div class="reward-top">
+          <span class="reward-badge rb">Rakeback</span>
+        </div>
+        <div class="reward-amount rb" id="rakebackAmount">—</div>
+        <div class="reward-sub" id="rakebackSub">earned this week</div>
+        <button class="reward-claim-btn rb" id="claimRakebackBtn" disabled>Claim</button>
+      </div>
+
+      <!-- Bonus -->
+      <div class="reward-card bonus">
+        <div class="reward-top">
+          <span class="reward-badge bo">Bonus</span>
+        </div>
+        <div class="reward-amount bo" id="bonusAmount">—</div>
+        <div class="reward-sub" id="bonusSub">available balance</div>
+        <button class="reward-claim-btn bo" id="claimBonusBtn" disabled>Claim</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Recent Bets -->
+  <div class="section" style="animation-delay:0.18s">
+    <div class="section-hd">
+      <div class="section-title">Recent Bets</div>
+      <div class="section-count" id="histCount">—</div>
+    </div>
+    <div class="history-list" id="histList"></div>
+  </div>
+
+  <!-- Settings -->
+  <div class="section" style="animation-delay:0.24s">
+    <div class="section-hd"><div class="section-title">Account</div></div>
+    <div class="settings-card">
+      <div class="settings-row">
+        <span class="row-label">Email</span>
+        <span class="row-val" id="settingsEmail">—</span>
+      </div>
+      <div class="settings-row">
+        <span class="row-label">Member since</span>
+        <span class="row-val" id="settingsJoined">—</span>
+      </div>
+      <div class="settings-row">
+        <span class="row-label">Sign out</span>
+        <button class="btn-danger" id="logoutBtn">Sign Out →</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<!-- SVG sprite (inline, hidden) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- hourglass -->
+  <symbol id="icon-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 22h14"/>
+    <path d="M5 2h14"/>
+    <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/>
+    <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>
+  </symbol>
+  <!-- flame -->
+  <symbol id="icon-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+  </symbol>
+</svg>
+
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  const supabase = createClient(
+    "https://yjeedgcveawterfpvnuc.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqZWVkZ2N2ZWF3dGVyZnB2bnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzU3MjYsImV4cCI6MjA5MjAxMTcyNn0.nAcKJcUjVZW8-qrPm3n9XDvoqUm4jcD3srZwJkPuUBU",
+    { auth: { persistSession: true, autoRefreshToken: true } }
+  );
+
+  // ── SVG helpers ──────────────────────────────────────────────────────────────
+  function svgUse(id, cls = "") {
+    return `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+  }
+
+  // ── Toast ────────────────────────────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2800);
+  }
+
+  // ── Auth ─────────────────────────────────────────────────────────────────────
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.replace("login.html"); }
+  const user = session.user;
+
+  // ── Profile ──────────────────────────────────────────────────────────────────
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  const p = profile || { balance: 1000, streak: 0, total_picks: 0, correct_picks: 0 };
+
+  const initial = (user.email || "?")[0].toUpperCase();
+  const name    = user.email?.split("@")[0] || "Prophet";
+  const joined  = new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const wr      = p.total_picks > 0 ? Math.round((p.correct_picks / p.total_picks) * 100) + "%" : "—";
+
+  document.getElementById("dashAvatar").textContent  = initial;
+  document.getElementById("dashName").textContent    = name;
+  document.getElementById("dashEmail").textContent   = user.email;
+  document.getElementById("dashJoined").textContent  = "Joined " + joined;
+  document.getElementById("dashBalance").textContent = "$" + Number(p.balance).toLocaleString();
+  document.getElementById("dashWR").textContent      = wr;
+  document.getElementById("dashPicks").textContent   = p.total_picks || 0;
+  document.getElementById("dashStreak").textContent  = p.streak || 0;
+  document.getElementById("streakSub").innerHTML     = svgUse("icon-flame", "") + " current";
+  document.getElementById("settingsEmail").textContent  = user.email;
+  document.getElementById("settingsJoined").textContent = joined;
+
+  // ── Rakeback & Bonuses from Supabase ─────────────────────────────────────────
+  // Expects tables: `rakeback` (user_id, amount, claimed_at) and
+  //                 `bonuses`  (user_id, amount, expires_at, claimed_at)
+  // Falls back gracefully if tables don't exist yet.
+
+  async function loadRewards() {
+    // Rakeback: sum of unclaimed rows
+    const { data: rakeRows } = await supabase
+      .from("rakeback")
+      .select("amount")
+      .eq("user_id", user.id)
+      .is("claimed_at", null);
+
+    const rakeTotal = (rakeRows || []).reduce((s, r) => s + (r.amount || 0), 0);
+    document.getElementById("rakebackAmount").textContent = "$" + rakeTotal.toFixed(2);
+
+    const claimRakeBtn = document.getElementById("claimRakebackBtn");
+    if (rakeTotal > 0) {
+      claimRakeBtn.disabled = false;
+      claimRakeBtn.textContent = `Claim $${rakeTotal.toFixed(2)}`;
+    } else {
+      claimRakeBtn.textContent = "Nothing to claim";
+    }
+
+    claimRakeBtn.addEventListener("click", async () => {
+      claimRakeBtn.disabled = true;
+      claimRakeBtn.textContent = "Claiming…";
+      const { error } = await supabase
+        .from("rakeback")
+        .update({ claimed_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .is("claimed_at", null);
+
+      if (error) {
+        showToast("❌ Claim failed — try again");
+        claimRakeBtn.disabled = false;
+        claimRakeBtn.textContent = `Claim $${rakeTotal.toFixed(2)}`;
+      } else {
+        // Credit to profile balance
+        await supabase
+          .from("profiles")
+          .update({ balance: (p.balance || 0) + rakeTotal })
+          .eq("id", user.id);
+        document.getElementById("dashBalance").textContent =
+          "$" + Number((p.balance || 0) + rakeTotal).toLocaleString();
+        showToast(`✅ $${rakeTotal.toFixed(2)} rakeback claimed!`);
+        document.getElementById("rakebackAmount").textContent = "$0.00";
+        claimRakeBtn.textContent = "Nothing to claim";
+      }
+    });
+
+    // Bonuses: sum of unclaimed, non-expired rows
+    const now = new Date().toISOString();
+    const { data: bonusRows } = await supabase
+      .from("bonuses")
+      .select("id, amount, expires_at")
+      .eq("user_id", user.id)
+      .is("claimed_at", null)
+      .or(`expires_at.is.null,expires_at.gt.${now}`);
+
+    const bonusTotal = (bonusRows || []).reduce((s, r) => s + (r.amount || 0), 0);
+    document.getElementById("bonusAmount").textContent = "$" + bonusTotal.toFixed(2);
+
+    const claimBonusBtn = document.getElementById("claimBonusBtn");
+    if (bonusTotal > 0) {
+      claimBonusBtn.disabled = false;
+      claimBonusBtn.textContent = `Claim $${bonusTotal.toFixed(2)}`;
+    } else {
+      claimBonusBtn.textContent = "No bonuses";
+    }
+
+    const bonusIds = (bonusRows || []).map(r => r.id);
+    claimBonusBtn.addEventListener("click", async () => {
+      if (!bonusIds.length) return;
+      claimBonusBtn.disabled = true;
+      claimBonusBtn.textContent = "Claiming…";
+      const { error } = await supabase
+        .from("bonuses")
+        .update({ claimed_at: new Date().toISOString() })
+        .in("id", bonusIds);
+
+      if (error) {
+        showToast("❌ Claim failed — try again");
+        claimBonusBtn.disabled = false;
+        claimBonusBtn.textContent = `Claim $${bonusTotal.toFixed(2)}`;
+      } else {
+        await supabase
+          .from("profiles")
+          .update({ balance: (p.balance || 0) + bonusTotal })
+          .eq("id", user.id);
+        document.getElementById("dashBalance").textContent =
+          "$" + Number((p.balance || 0) + bonusTotal).toLocaleString();
+        showToast(`🎁 $${bonusTotal.toFixed(2)} bonus claimed!`);
+        document.getElementById("bonusAmount").textContent = "$0.00";
+        claimBonusBtn.textContent = "No bonuses";
+      }
+    });
+  }
+
+  await loadRewards();
+
+  // ── Recent Bets from Supabase bets table ─────────────────────────────────────
+  const { data: bets, error: betsError } = await supabase
+    .from("bets")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const histList  = document.getElementById("histList");
+  const histCount = document.getElementById("histCount");
+
+  if (betsError) {
+    histList.innerHTML = `<div class="empty">Failed to load bets 💀</div>`;
+  } else if (!bets || bets.length === 0) {
+    histList.innerHTML = `<div class="empty">No picks yet — go make some predictions! 💀</div>`;
+    histCount.textContent = "0 picks";
+  } else {
+    histCount.textContent = bets.length + " picks";
+
+    histList.innerHTML = bets.map((bet) => {
+      const vote  = bet.choice || bet.vote || "—";
+      const wager = bet.amount || bet.wager || 0;
+      const title = bet.prediction_title || bet.prediction_id || "Unknown prediction";
+      const ts    = bet.created_at
+        ? new Date(bet.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        : "";
+
+      // Determine outcome
+      let outcomeCls, outcomeIcon, amtCls, amtVal, amtSub;
+
+      if (bet.outcome === "win" || bet.result === "win") {
+        outcomeCls = "win";
+        outcomeIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#57ffa8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        const profit = bet.payout ? bet.payout - wager : wager;
+        amtCls = "pos"; amtVal = `+$${Number(profit).toFixed(2)}`; amtSub = "profit";
+      } else if (bet.outcome === "loss" || bet.result === "loss") {
+        outcomeCls = "loss";
+        outcomeIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+        amtCls = "neg"; amtVal = `-$${Number(wager).toFixed(2)}`; amtSub = "lost";
+      } else {
+        // Pending / open — hourglass icon
+        outcomeCls = "open";
+        outcomeIcon = svgUse("icon-hourglass", "");
+        amtCls = "neu"; amtVal = wager ? `$${Number(wager).toFixed(2)}` : "—"; amtSub = "wagered";
+      }
+
+      return `
+      <div class="history-row">
+        <div class="history-outcome ${outcomeCls}">${outcomeIcon}</div>
+        <div class="history-q">
+          ${title}
+          <div class="history-sub">
+            Voted <strong>${String(vote).toUpperCase()}</strong>${ts ? ` · ${ts}` : ""}
+          </div>
+        </div>
+        <div class="history-amt">
+          <div class="amt-val ${amtCls}">${amtVal}</div>
+          <div class="amt-sub">${amtSub}</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // ── Logout ───────────────────────────────────────────────────────────────────
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.replace("login.html");
+  });
+</script>
+</body>
+</html>
