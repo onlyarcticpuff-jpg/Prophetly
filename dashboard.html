@@ -166,6 +166,13 @@
     .settings-row .btn-danger:hover { background: rgba(255,107,107,0.08); }
 
     .empty { text-align: center; padding: 30px; color: var(--muted); font-size: 14px; }
+    .icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-left: 4px;
+  filter: invert(90%) sepia(80%) saturate(300%) hue-rotate(20deg) brightness(110%);
+    }
   </style>
 </head>
 <body>
@@ -207,7 +214,7 @@
     <div class="stat-tile">
       <div class="label">Streak</div>
       <div class="value blue" id="dashStreak">—</div>
-
+       <div class="label">current</div>  
     </div>
   </div>
 
@@ -278,8 +285,9 @@
   document.getElementById("dashBalance").textContent = "$" + Number(p.balance).toLocaleString();
   document.getElementById("dashWR").textContent      = wr;
   document.getElementById("dashPicks").textContent   = p.total_picks || 0;
-  document.getElementById("dashStreak").innerHTML =(p.streak || 0) +
-  ' <img src="/assets/icons/flame.svg" width="14" style="vertical-align:middle; margin-left:4px;">';
+  document.getElementById("dashStreak").innerHTML =
+  (p.streak || 0) +
+  ' <img src="/assets/icons/flame.svg" class="icon">';
   document.getElementById("settingsEmail").textContent  = user.email;
   document.getElementById("settingsJoined").textContent = joined;
 
