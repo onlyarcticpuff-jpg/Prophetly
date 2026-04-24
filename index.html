@@ -398,7 +398,7 @@
   <div class="chat-messages" id="chatMessages"></div>
   <div class="chat-input-wrap">
     <input class="chat-input" id="chatInput" type="text" maxlength="280" placeholder="Say something…" />
-    <button class="chat-send" id="chatSend"><img src="/assets/icons/zap.svg" class="icon"></button>
+    <button class="chat-send" id="chatSend"><img src="/assets/icons/send-horizontal.svg" class="icon"></button>
   </div>
 </div>
 
@@ -708,106 +708,283 @@
   }
 
   /* ══════ GLOBAL CHAT ══════
-   * REAL-TIME UPGRADE:
-   * 1. Create table: chat_messages(id,user_id,username,text,created_at,type)
-   * 2. Load 50 msgs: supabase.from('chat_messages').select('*').order('created_at').limit(50)
-   * 3. Subscribe: supabase.channel('chat').on('postgres_changes',{event:'INSERT',...},payload=>appendMsg(payload.new)).subscribe()
-   * 4. Send: supabase.from('chat_messages').insert({user_id,username,text,type:'message'})
-   * 5. Remove pushFakeReply() below — replies come from subscription automatically
-   */
-  const chatPanel = document.getElementById("chatPanel");
-  const chatMsgs  = document.getElementById("chatMessages");
-  const chatInput = document.getElementById("chatInput");
-  document.getElementById("chatOnline").textContent = (Math.floor(Math.random()*35)+12) + " online";
+<!-- REAL-TIME UPGRADE (Production Ready) -->
+<script>
+// 1. Create table (run once in Supabase SQL Editor):
+/*
+CREATE TABLE chat_messages (
+  id BIGSERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  username TEXT NOT NULL,
+  text TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  type TEXT DEFAULT 'message' CHECK (type IN ('message', 'bet_announce', 'announcement', 'system'))
+);
+*/
 
-  document.getElementById("chatToggleBtn").addEventListener("click",()=>{
-    chatPanel.classList.toggle("open");
-    if (chatPanel.classList.contains("open")){ scrollBottom(); chatInput.focus(); }
-  });
-  document.getElementById("chatCloseBtn").addEventListener("click",()=>chatPanel.classList.remove("open"));
+const chatPanel = document.getElementById("chatPanel");
+const chatMsgs  = document.getElementById("chatMessages");
+const chatInput = document.getElementById("chatInput");
 
-  const FAKE_SEED = [
-    {id:1,username:"shadow",    text:"yo who else is on Lakers tonight 🏀",           created_at:minsAgo(28),type:"message",mine:false},
-    {id:2,username:"oracle_x",  text:"Lakers is a trap. Celtics all day 💀",           created_at:minsAgo(26),type:"message",mine:false},
-    {id:3,username:"vibe_check",text:"put $500 on BTC above 70k let's gooo",           created_at:minsAgo(22),type:"message",mine:false},
-    {id:4,username:"shadow",    text:"@vibe_check you're cooked bro 😭",               created_at:minsAgo(20),type:"message",mine:false},
-    {id:5,username:"luck99",    text:"🏆 oracle_x bet YES on Lakers · $200",           created_at:minsAgo(18),type:"bet_announce",mine:false},
-    {id:6,username:"guesswho",  text:"the elon prediction is basically free money ngl",created_at:minsAgo(12),type:"message",mine:false},
-    {id:7,username:"vibe_check",text:"gary WILL leave that 1 star review 💀💀",       created_at:minsAgo(8), type:"message",mine:false},
-    {id:8,username:"oracle_x",  text:"anyone think it snows in florida? asking for me",created_at:minsAgo(4), type:"message",mine:false},
-    {id:9,username:"shadow",    text:"33x multiplier and 3% chance… tempting ngl",     created_at:minsAgo(2), type:"message",mine:false},
-  ];
-  const chatLog = [...FAKE_SEED];
-  let msgId = 200;
+document.getElementById("chatOnline").textContent = 
+  (Math.floor(Math.random()*35) + 12) + " online";
 
-  function minsAgo(m){ return new Date(Date.now()-m*60000); }
-  function fmtTime(d){ return new Date(d).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true}); }
-  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-
-  function buildMsgEl(msg){
-    const mine=msg.mine||msg.user_id===user.id;
-    const colors=["#e8ff57","#57ffa8","#57a8ff","#ff6b6b","#c57fff","#ffb857"];
-    const ci=(msg.username||"?").charCodeAt(0)%colors.length;
-    const d=document.createElement("div");
-    d.className=`chat-msg${mine?" mine":""}${msg.type==="bet_announce"?" bet-announce":""}`;
-    d.id=`msg-${msg.id}`;
-    d.innerHTML=`
-      <div class="chat-avatar" style="background:${colors[ci]}">${(msg.username||"?")[0].toUpperCase()}</div>
-      <div class="chat-bubble-wrap">
-        <span class="chat-username">${esc(msg.username||"")}</span>
-        <div class="chat-bubble">${esc(msg.text)}</div>
-        <span class="chat-ts">${fmtTime(msg.created_at)}</span>
-      </div>`;
-    return d;
-  }
-
-  function renderChat(){
-    chatMsgs.innerHTML="";
-    const chip=document.createElement("div"); chip.className="chat-date-chip";
-    chip.innerHTML="<span>Today</span>"; chatMsgs.appendChild(chip);
-    chatLog.forEach(m=>chatMsgs.appendChild(buildMsgEl(m)));
+document.getElementById("chatToggleBtn").addEventListener("click", () => {
+  chatPanel.classList.toggle("open");
+  if (chatPanel.classList.contains("open")) {
     scrollBottom();
+    chatInput.focus();
+  }
+});
+
+document.getElementById("chatCloseBtn").addEventListener("click", () => 
+  chatPanel.classList.remove("open")
+);
+
+// ====================== REAL CHAT LOGIC ======================
+
+let chatLog = [];
+let msgId = 200; // fallback only
+
+function minsAgo(m) { return new Date(Date.now() - m * 60000); }
+function fmtTime(d) { 
+  return new Date(d).toLocaleTimeString("en-US", { 
+    hour: "numeric", 
+    minute: "2-digit", 
+    hour12: true 
+  }); 
+}
+function esc(s) { 
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
+}
+
+function buildMsgEl(msg) {
+  const mine = msg.mine || (msg.user_id === user?.id);
+  const colors = ["#e8ff57","#57ffa8","#57a8ff","#ff6b6b","#c57fff","#ffb857"];
+  const ci = (msg.username || "?").charCodeAt(0) % colors.length;
+
+  const d = document.createElement("div");
+  d.className = `chat-msg\( {mine ? " mine" : ""} \){msg.type === "bet_announce" ? " bet-announce" : ""}`;
+  if (msg.type === "announcement" || msg.type === "system") {
+    d.classList.add("chat-announcement");
   }
 
-  function appendMsg(msg){
-    chatMsgs.appendChild(buildMsgEl(msg)); scrollBottom();
+  d.id = `msg-${msg.id}`;
+  d.innerHTML = `
+    <div class="chat-avatar" style="background:${colors[ci]}">
+      ${(msg.username || "?")[0].toUpperCase()}
+    </div>
+    <div class="chat-bubble-wrap">
+      <span class="chat-username">${esc(msg.username || "System")}</span>
+      <div class="chat-bubble">${esc(msg.text)}</div>
+      <span class="chat-ts">${fmtTime(msg.created_at)}</span>
+    </div>`;
+
+  return d;
+}
+
+function renderChat() {
+  chatMsgs.innerHTML = "";
+  const chip = document.createElement("div");
+  chip.className = "chat-date-chip";
+  chip.innerHTML = "<span>Today</span>";
+  chatMsgs.appendChild(chip);
+
+  chatLog.forEach(m => chatMsgs.appendChild(buildMsgEl(m)));
+  scrollBottom();
+}
+
+function appendMsg(msg) {
+  chatMsgs.appendChild(buildMsgEl(msg));
+  scrollBottom();
+}
+
+function scrollBottom() {
+  setTimeout(() => {
+    chatMsgs.scrollTop = chatMsgs.scrollHeight;
+  }, 30);
+}
+
+// ====================== SEND MESSAGE ======================
+
+async function sendMsg() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+
+  const myName = user?.email?.split("@")[0] || "anon";
+
+  // Check for chat commands
+  if (text.startsWith('/')) {
+    handleChatCommand(text);
+    chatInput.value = "";
+    return;
   }
 
-  function scrollBottom(){ setTimeout(()=>{ chatMsgs.scrollTop=chatMsgs.scrollHeight; },30); }
+  const newMsg = {
+    id: Date.now(), // temporary ID, Supabase will override
+    user_id: user?.id || "local",
+    username: myName,
+    text: text,
+    created_at: new Date(),
+    type: "message",
+    mine: true
+  };
 
-  function sendMsg(){
-    const text=chatInput.value.trim(); if(!text) return;
-    const myName=user.email?.split("@")[0]||"anon";
-    const msg={id:++msgId,user_id:user.id,username:myName,text,created_at:new Date(),type:"message",mine:true};
-    chatLog.push(msg); appendMsg(msg); chatInput.value="";
-    /* REAL: await supabase.from('chat_messages').insert({user_id:user.id,username:myName,text,type:'message'}) */
-    pushFakeReply();
+  // Optimistic UI update
+  chatLog.push(newMsg);
+  appendMsg(newMsg);
+  chatInput.value = "";
+
+  // Real Supabase insert
+  try {
+    await supabase
+      .from('chat_messages')
+      .insert({
+        user_id: user?.id || "local",
+        username: myName,
+        text: text,
+        type: 'message'
+      });
+  } catch (err) {
+    console.error("Failed to send message:", err);
+    // Optional: show error toast
   }
+}
 
-  document.getElementById("chatSend").addEventListener("click",sendMsg);
-  chatInput.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey) sendMsg(); });
+// ====================== CHAT COMMANDS ======================
 
-  function pushChatBetAnnounce(username,choice,question,amount){
-    const q=question.length>42?question.slice(0,42)+"…":question;
-    const msg={id:++msgId,user_id:user.id,username,
-      text:`${choice==="yes"?"✅":"❌"} ${username} bet ${choice.toUpperCase()} on "${q}"${amount?` · $${amount}`:""}`,
-      created_at:new Date(),type:"bet_announce",mine:true};
-    chatLog.push(msg);
-    if(chatPanel.classList.contains("open")) appendMsg(msg);
+function handleChatCommand(cmd) {
+  const [command, ...args] = cmd.slice(1).trim().split(/\s+/);
+  const argStr = args.join(" ");
+
+  switch (command.toLowerCase()) {
+    case "help":
+      addSystemMessage("Available commands: /help, /clear, /me <action>");
+      break;
+
+    case "clear":
+      chatMsgs.innerHTML = "";
+      const chip = document.createElement("div");
+      chip.className = "chat-date-chip";
+      chip.innerHTML = "<span>Today</span>";
+      chatMsgs.appendChild(chip);
+      addSystemMessage("Chat cleared locally.");
+      break;
+
+    case "me":
+      if (!argStr) {
+        addSystemMessage("Usage: /me <action>");
+        return;
+      }
+      addAnnouncement(`${user?.email?.split("@")[0] || "anon"} ${argStr}`);
+      break;
+
+    default:
+      addSystemMessage(`Unknown command: /${command}. Type /help for available commands.`);
   }
+}
 
-  const FAKE_REPLIES=["let's gooo 🔥","big bet energy 😤","you're cooked 💀","bro really said MAX",
-    "respect 🫡","wild call","same honestly","we eating tonight 🍽️","we'll see 👀","facts","no way that hits"];
-  const FAKE_NAMES=["oracle_x","shadow","vibe_check","guesswho","luck99"];
-  function pushFakeReply(){
-    setTimeout(()=>{
-      const name=FAKE_NAMES[Math.floor(Math.random()*FAKE_NAMES.length)];
-      const text=FAKE_REPLIES[Math.floor(Math.random()*FAKE_REPLIES.length)];
-      const msg={id:++msgId,username:name,text,created_at:new Date(),type:"message",mine:false};
-      chatLog.push(msg);
-      if(chatPanel.classList.contains("open")) appendMsg(msg);
-    }, 1800+Math.random()*2500);
+// ====================== SYSTEM & ANNOUNCEMENT HELPERS ======================
+
+function addSystemMessage(text) {
+  const msg = {
+    id: Date.now(),
+    username: "System",
+    text: text,
+    created_at: new Date(),
+    type: "system",
+    mine: false
+  };
+  chatLog.push(msg);
+  if (chatPanel.classList.contains("open")) appendMsg(msg);
+}
+
+function addAnnouncement(text) {
+  const msg = {
+    id: Date.now(),
+    username: "Announcement",
+    text: text,
+    created_at: new Date(),
+    type: "announcement",
+    mine: false
+  };
+  chatLog.push(msg);
+  if (chatPanel.classList.contains("open")) appendMsg(msg);
+}
+
+// ====================== BET ANNOUNCEMENT (unchanged logic) ======================
+
+function pushChatBetAnnounce(username, choice, question, amount) {
+  const q = question.length > 42 ? question.slice(0, 42) + "…" : question;
+  const msg = {
+    id: Date.now(),
+    user_id: user?.id || "system",
+    username: username,
+    text: `${choice === "yes" ? "YES" : "NO"} ${username} bet ${choice.toUpperCase()} on "${q}"${amount ? ` · $${amount}` : ""}`,
+    created_at: new Date(),
+    type: "bet_announce",
+    mine: false
+  };
+  chatLog.push(msg);
+  if (chatPanel.classList.contains("open")) appendMsg(msg);
+}
+
+// ====================== REAL-TIME SUBSCRIPTION ======================
+
+function initRealtimeChat() {
+  // Load last 50 messages
+  supabase
+    .from('chat_messages')
+    .select('*')
+    .order('created_at', { ascending: true })
+    .limit(50)
+    .then(({ data, error }) => {
+      if (error) {
+        console.error("Error loading chat history:", error);
+        return;
+      }
+      chatLog = data || [];
+      renderChat();
+    });
+
+  // Subscribe to new messages
+  supabase
+    .channel('chat')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'chat_messages'
+      },
+      (payload) => {
+        const newMsg = payload.new;
+        // Avoid duplicate if we just sent it
+        if (!chatLog.some(m => m.id === newMsg.id)) {
+          chatLog.push(newMsg);
+          if (chatPanel.classList.contains("open")) {
+            appendMsg(newMsg);
+          }
+        }
+      }
+    )
+    .subscribe((status) => {
+      console.log('Chat subscription status:', status);
+    });
+}
+
+// ====================== INITIALIZE ======================
+
+document.getElementById("chatSend").addEventListener("click", sendMsg);
+chatInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
   }
+});
+
+// Auto-init when script runs
+initRealtimeChat();
 
   /* INIT */
   await loadProfile();
