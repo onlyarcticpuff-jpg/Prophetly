@@ -319,19 +319,19 @@
   <div class="nav-right">
     <div class="balance-pill" id="balancePill">
       <span class="nav-balance">
-  <img src="assets/icons/wallet.svg" class="icon">
+  <img src="/assets/icons/wallet.svg" class="icon">
   <span class="amt" id="navBalance">—</span>
       </span>
     </div>
     <div class="chat-toggle-btn" id="chatToggleBtn" title="Global Chat">
-      <img src="assets/icons/message-circle.svg" width="16"><span class="chat-dot"></span>
+      <img src="/assets/icons/message-circle.svg" width="16"><span class="chat-dot"></span>
     </div>
     <div class="avatar" id="avatarBtn">
       <span id="avatarInitial">?</span>
       <div class="avatar-menu" id="avatarMenu">
-        <a href="dashboard.html"><img src="assets/icons/gauge.svg" class="menu-icon">Dashboard</a>
-        <a href="#"><img src="assets/icons/cpu.svg" class="menu-icon"> Settings</a>
-        <button id="logoutBtn" class="danger"><img src="assets/icons/x.svg" class="menu-icon"> Sign Out</button>
+        <a href="dashboard.html"><img src="/assets/icons/gauge.svg" class="menu-icon">Dashboard</a>
+        <a href="#"><img src="/assets/icons/cpu.svg" class="menu-icon"> Settings</a>
+        <button id="logoutBtn" class="danger"><img src="/assets/icons/x.svg" class="menu-icon"> Sign Out</button>
       </div>
     </div>
   </div>
@@ -344,12 +344,12 @@
   </div>
 
   <div class="cat-row" id="catRow">
-    <button class="cat-btn active" data-cat="all"><img src="assets/icons/zap.svg" class="cat-icon"> All</button>
-    <button class="cat-btn" data-cat="weather"><img src="assets/icons/cloud-lightning.svg" class="cat-icon"> Weather</button>
-    <button class="cat-btn" data-cat="sports"><img src="assets/icons/sport-shoe.svg" class="cat-icon"> Sports</button>
-    <button class="cat-btn" data-cat="finance"><img src="assets/icons/badge-dollar-sign.svg" class="cat-icon"> Finance</button>
-    <button class="cat-btn" data-cat="tech"><img src="assets/icons/cpu.svg" class="cat-icon"> Tech</button>
-    <button class="cat-btn" data-cat="dumb"><img src="assets/icons/skull.svg" class="cat-icon"> Dumb Stuff</button>
+    <button class="cat-btn active" data-cat="all"><img src="/assets/icons/zap.svg" class="cat-icon"> All</button>
+    <button class="cat-btn" data-cat="weather"><img src="/assets/icons/cloud-lightning.svg" class="cat-icon"> Weather</button>
+    <button class="cat-btn" data-cat="sports"><img src="/assets/icons/sport-shoe.svg" class="cat-icon"> Sports</button>
+    <button class="cat-btn" data-cat="finance"><img src="/assets/icons/badge-dollar-sign.svg" class="cat-icon"> Finance</button>
+    <button class="cat-btn" data-cat="tech"><img src="/assets/icons/cpu.svg" class="cat-icon"> Tech</button>
+    <button class="cat-btn" data-cat="dumb"><img src="/assets/icons/skull.svg" class="cat-icon"> Dumb Stuff</button>
   </div>
 
   <div class="section-label">LIVE NOW</div>
@@ -377,7 +377,7 @@
   <div class="lb-card">
     <div class="lb-header">
       <div class="lb-title">Top Prophets</div>
-      <div class="lb-sub">All time <img src="assets/icons/badge-dollar-sign.svg" class="lb-trophy"></div>
+      <div class="lb-sub">All time <img src="/assets/icons/badge-dollar-sign.svg" class="lb-trophy"></div>
     </div>
     <div id="lbList"><div class="empty" style="padding:20px;font-size:13px">Loading…</div></div>
   </div>
@@ -398,7 +398,7 @@
   <div class="chat-messages" id="chatMessages"></div>
   <div class="chat-input-wrap">
     <input class="chat-input" id="chatInput" type="text" maxlength="280" placeholder="Say something…" />
-    <button class="chat-send" id="chatSend"><img src="assets/icons/zap.svg" class="icon"></button>
+    <button class="chat-send" id="chatSend"><img src="/assets/icons/zap.svg" class="icon"></button>
   </div>
 </div>
 
@@ -496,11 +496,11 @@
 
   const CAT_CLASS = {weather:"cat-weather",sports:"cat-sports",dumb:"cat-dumb",finance:"cat-finance",tech:"cat-tech"};
   const CAT_LABEL = {
-    weather:`<img src="assets/icons/cloud-lightning.svg" class="badge-icon"> Weather`,
-    sports: `<img src="assets/icons/sport-shoe.svg" class="badge-icon"> Sports`,
-    dumb:   `<img src="assets/icons/skull.svg" class="badge-icon"> Dumb Stuff`,
-    finance:`<img src="assets/icons/badge-dollar-sign.svg" class="badge-icon"> Finance`,
-    tech:   `<img src="assets/icons/cpu.svg" class="badge-icon"> Tech`
+    weather:`<img src="/assets/icons/cloud-lightning.svg" class="badge-icon"> Weather`,
+    sports: `<img src="/assets/icons/sport-shoe.svg" class="badge-icon"> Sports`,
+    dumb:   `<img src="/assets/icons/skull.svg" class="badge-icon"> Dumb Stuff`,
+    finance:`<img src="/assets/icons/badge-dollar-sign.svg" class="badge-icon"> Finance`,
+    tech:   `<img src="/assets/icons/cpu.svg" class="badge-icon"> Tech`
   };
 
   /* Track YES/NO choice before hitting BET */
@@ -527,8 +527,8 @@
           <div class="pred-question">${p.question}</div>
           <div class="pred-desc">${p.desc}</div>
           <div class="pred-stats">
-            <span class="pred-stat"><img src="assets/icons/message-circle.svg" class="stat-icon"> <strong>${Number(p.total_bets).toLocaleString()}</strong> bets</span>
-            <span class="pred-stat"><img src="assets/icons/bolt.svg" class="stat-icon"> <strong>${
+            <span class="pred-stat"><img src="/assets/icons/message-circle.svg" class="stat-icon"> <strong>${Number(p.total_bets).toLocaleString()}</strong> bets</span>
+            <span class="pred-stat"><img src="/assets/icons/bolt.svg" class="stat-icon"> <strong>${
  p.closes_at
     ? (() => {
         const diff = new Date(p.closes_at) - new Date();
@@ -540,12 +540,12 @@
       })()
     : "—"
 }</strong> left</span>
-            <span class="pred-stat"><img src="assets/icons/circle-check.svg" class="stat-icon"><strong>${p.yes_pct}%</strong> YES</span>
+            <span class="pred-stat"><img src="/assets/icons/circle-check.svg" class="stat-icon"><strong>${p.yes_pct}%</strong> YES</span>
           </div>
           ${!voted ? `
           <div class="vote-row">
-            <button class="vote-btn yes${choice==="yes"?" selected-yes":""}" data-id="${p.id}" data-vote="yes"><img src="assets/icons/circle-check.svg" class="vote-icon" width="14"> YES</button>
-            <button class="vote-btn no${choice==="no"?" selected-no":""}"   data-id="${p.id}" data-vote="no"><img src="assets/icons/x.svg" class="vote-icon" width="14"> NO</button>
+            <button class="vote-btn yes${choice==="yes"?" selected-yes":""}" data-id="${p.id}" data-vote="yes"><img src="/assets/icons/circle-check.svg" class="vote-icon" width="14"> YES</button>
+            <button class="vote-btn no${choice==="no"?" selected-no":""}"   data-id="${p.id}" data-vote="no"><img src="/assets/icons/x.svg" class="vote-icon" width="14"> NO</button>
           </div>
           <div class="wager-section${choice?"":" hidden"}" id="wager-section-${p.id}">
             <div class="wager-top">
@@ -565,7 +565,7 @@
           </div>
           <button class="bet-btn${choice?"":" hidden"}" id="bet-btn-${p.id}" data-id="${p.id}">
             <div class="btn-spinner"></div>
-            <span class="btn-text">Place Bet ${choice==="yes"?'<img src="assets/icons/circle-check.svg" width="14" style="filter:brightness(0);vertical-align:middle"> YES':choice==="no"?'<img src="assets/icons/x.svg" width="14" style="filter:brightness(0);vertical-align:middle"> NO':""}</span>
+            <span class="btn-text">Place Bet ${choice==="yes"?'<img src="/assets/icons/circle-check.svg" width="14" style="filter:brightness(0);vertical-align:middle"> YES':choice==="no"?'<img src="assets/icons/x.svg" width="14" style="filter:brightness(0);vertical-align:middle"> NO':""}</span>
           </button>` : ""}
         </div>
         ${voted ? `
@@ -576,8 +576,8 @@
               <span class="vb-label">${bet.choice.toUpperCase()} locked in</span>
             </div>
             <div class="voted-status">${
-              bet.status==="won"  ? `<span class="status-won"><img src="assets/icons/badge-dollar-sign.svg" class="status-icon"> Won · payout <b style="color:var(--green)">$${bet.payout}</b></span>` :
-              bet.status==="lost" ? `<span class="status-lost"><img src="assets/icons/skull.svg" class="status-icon"> Lost · better luck next time</span>` : `<span class="status-pend"><img src="assets/icons/bolt.svg" class="status-icon"> Pending resolution</span>`
+              bet.status==="won"  ? `<span class="status-won"><img src="/assets/icons/badge-dollar-sign.svg" class="status-icon"> Won · payout <b style="color:var(--green)">$${bet.payout}</b></span>` :
+              bet.status==="lost" ? `<span class="status-lost"><img src="/assets/icons/skull.svg" class="status-icon"> Lost · better luck next time</span>` : `<span class="status-pend"><img src="assets/icons/bolt.svg" class="status-icon"> Pending resolution</span>`
             }</div>
           </div>
           ${bet.amount ? `<div class="voted-amount">$${Number(bet.amount).toLocaleString()}</div>` : ""}
