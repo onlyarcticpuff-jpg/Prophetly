@@ -649,77 +649,54 @@
     : "$—";
 };
 
-  /* PLACE BET */
-  async function placeBet(predId) {
-    if (!profile) return;
-    const choice = pendingChoice[predId];
-    if (!choice) { showToast("Pick YES or NO first 💀", "loss"); return; }
+/* Place bet (secure) */
+const { error } = await supabase.rpc("place_bet_secure", {
+  p_prediction_id: predId,
+  p_choice: choice,
+  p_amount: amount
+});
 
-    const wagerEl = document.getElementById(`wager-${predId}`);
-    const amount  = Math.max(0, parseInt(wagerEl?.value) || 0);
-    if (amount <= 0)             { showToast("Enter a wager amount 💀", "loss"); return; }
-    if (amount > profile.balance){ showToast("Not enough balance 💀",   "loss"); return; }
+if (error) {
+  console.error("bet error:", error);
 
-    /* Loading state */
-    const betBtn = document.getElementById(`bet-btn-${predId}`);
-    const card   = document.getElementById(`card-${predId}`);
-    betBtn.classList.add("loading"); betBtn.disabled = true;
-    card.classList.add("is-submitting");
-    card.querySelectorAll(".vote-btn").forEach(b => b.disabled = true);
-
-    /* Insert bet */
-    const pred = PREDICTIONS.find(p => p.id === predId);
-    const { error } = await supabase.from("bets").insert({
-      user_id: user.id, prediction_id: predId,
-      choice, amount, multiplier:
-  choice === "yes"
-    ? (pred?.yes_multiplier ?? pred?.multiplier ?? 1)
-    : (pred?.no_multiplier ?? 1.3)
-    });
-
-    if (error) {
-      console.error(error);
-      if (error.code === "23505") {
-        showToast("Already bet on this one 💀", "loss");
-        myBets[predId] = { choice, amount, status: "pending", payout: null };
-        delete pendingChoice[predId];
-      } else {
-        showToast("Bet failed — try again", "loss");
-        betBtn.classList.remove("loading"); betBtn.disabled = false;
-        card.classList.remove("is-submitting");
-        card.querySelectorAll(".vote-btn").forEach(b => b.disabled = false);
-      }
-      renderPredictions(); return;
-    }
-
-    /* Update balance */
-    profile.balance     -= amount;
-    profile.total_picks  = (profile.total_picks || 0) + 1;
-    await supabase.from("profiles")
-      .update({ balance: profile.balance, total_picks: profile.total_picks })
-      .eq("id", user.id);
-
-    /* Update local state */
-    myBets[predId] = { choice, amount, status: "pending", payout: null };
-    delete pendingChoice[predId];
-
-    /* UI feedback */
-    renderBalance(true);
-    const mult =
-  choice === "yes"
-    ? (pred?.yes_multiplier ?? pred?.multiplier ?? 1)
-    : (pred?.no_multiplier ?? 1.3);
-
-const pot = Math.floor(amount * mult);
-    showToast(
-      choice === "yes"
-        ? `✅ YES locked! $${amount} wagered → up to $${pot.toLocaleString()}`
-        : `❌ NO locked! $${amount} wagered → up to $${pot.toLocaleString()}`,
-      "win"
-    );
-    pushChatBetAnnounce(profile?.username || user.email?.split("@")[0] || "anon", choice, pred?.question || "a prediction", amount);
-    renderPredictions();
+  if (error.message?.includes("duplicate")) {
+    showToast("Already bet on this one 💀", "loss");
+  } else if (error.message?.includes("balance")) {
+    showToast("Not enough balance", "loss");
+  } else {
+    showToast("Bet failed — try again", "loss");
   }
+
+  betBtn.classList.remove("loading");
+  betBtn.disabled = false;
+  card.classList.remove("is-submitting");
+  card.querySelectorAll(".vote-btn").forEach(b => b.disabled = false);
+  return;
+}
+
+/* Success state */
+myBets[predId] = { choice, amount, status: "pending", payout: null };
+delete pendingChoice[predId];
+
+/* Refresh real data */
+await loadProfile();
+await loadPredictions();
+
+/* UI feedback */
+showToast(
+  choice === "yes"
+    ? `✅ YES locked! $${amount} wagered`
+    : `❌ NO locked! $${amount} wagered`,
+  "win"
+);
+
+/* Chat announce */
+pushChatBetAnnounce(
+  profile?.username || user.email?.split("@")[0] || "anon",
+  choice,
+  pred?.question || "a prediction",
+  amount
+);
 
   /* LEADERBOARD */
   async function loadLeaderboard() {
