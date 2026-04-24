@@ -522,7 +522,10 @@
         <div class="pred-inner">
           <div class="pred-meta">
             <span class="pred-cat ${CAT_CLASS[p.category]||"cat-dumb"}">${CAT_LABEL[p.category]||p.category}</span>
-            <span class="pred-odds">×<strong>${p.multiplier}</strong></span>
+            <span class="pred-odds">
+  YES ×<strong>${p.yes_multiplier ?? p.multiplier ?? 1}</strong>  
+  · NO ×<strong>${p.no_multiplier ?? 1.3}</strong>
+      </span>
           </div>
           <div class="pred-question">${p.question}</div>
           <div class="pred-desc">${p.desc}</div>
