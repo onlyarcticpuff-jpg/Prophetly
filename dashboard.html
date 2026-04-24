@@ -278,7 +278,8 @@
   document.getElementById("dashBalance").textContent = "$" + Number(p.balance).toLocaleString();
   document.getElementById("dashWR").textContent      = wr;
   document.getElementById("dashPicks").textContent   = p.total_picks || 0;
-  document.getElementById("dashStreak").textContent  = (p.streak || 0) + " 🔥";
+  document.getElementById("dashStreak").innerHTML =(p.streak || 0) +
+  ' <img src="/assets/icons/flame.svg" width="14" style="vertical-align:middle; margin-left:4px;">';
   document.getElementById("settingsEmail").textContent  = user.email;
   document.getElementById("settingsJoined").textContent = joined;
 
@@ -319,7 +320,7 @@ if (error) {
 
     return `
     <div class="history-row">
-      <div class="history-outcome open">⏳</div>
+      <div class="history-outcome open"><img src="/assets/icons/hourglass.svg" width="14"></div>
       <div class="history-q">
         ${title}
         <div class="history-sub">
