@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prophetly — Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080b12;
+      --surface: #0e1420;
+      --raised:  #131a28;
+      --border:  rgba(255,255,255,0.06);
+      --accent:  #e8ff57;
+      --green:   #57ffa8;
+      --red:     #ff6b6b;
+      --blue:    #57a8ff;
+      --text:    #f0f2f8;
+      --muted:   #4a5568;
+      --sub:     #8892a4;
+    }
+
+    html { height: 100%; }
+    body {
+      min-height: 100%; background: var(--bg); color: var(--text);
+      font-family: 'Outfit', sans-serif; padding-bottom: 48px;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,11,18,0.85); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px; height: 60px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .back-btn {
+      background: var(--raised); border: 1px solid var(--border);
+      border-radius: 9px; padding: 7px 13px;
+      color: var(--sub); font-family: 'Outfit', sans-serif;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      text-decoration: none; display: flex; align-items: center; gap: 6px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .back-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+    .nav-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+
+    main { max-width: 680px; margin: 0 auto; padding: 28px 18px 0; position: relative; z-index: 1; }
+
+    /* Profile hero */
+    .profile-hero {
+      display: flex; align-items: center; gap: 18px;
+      margin-bottom: 28px; animation: fadeUp 0.4s ease both;
+    }
+    .profile-avatar {
+      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), #57ffa8);
+      display: grid; place-items: center;
+      font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #080b12;
+      box-shadow: 0 0 30px rgba(232,255,87,0.2);
+    }
+    .profile-info .name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+    .profile-info .email { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .profile-info .joined { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Stat grid */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+      margin-bottom: 24px; animation: fadeUp 0.4s 0.06s ease both;
+    }
+    @media(min-width: 500px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .stat-tile {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 16px;
+    }
+    .stat-tile .label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .stat-tile .value { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; }
+    .stat-tile .value.accent { color: var(--accent); }
+    .stat-tile .value.green  { color: var(--green); }
+    .stat-tile .value.blue   { color: var(--blue); }
+    .stat-tile .sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* Section */
+    .section { margin-bottom: 28px; animation: fadeUp 0.4s 0.12s ease both; }
+    .section-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+    .section-count { font-size: 12px; color: var(--muted); }
+
+    /* Streak calendar */
+    .streak-bar {
+      display: flex; gap: 5px; flex-wrap: wrap;
+    }
+    .streak-day {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: grid; place-items: center; font-size: 10px; font-weight: 600;
+      transition: transform 0.15s;
+    }
+    .streak-day:hover { transform: scale(1.15); }
+    .streak-day.win  { background: rgba(87,255,168,0.18); color: var(--green); border: 1px solid rgba(87,255,168,0.3); }
+    .streak-day.loss { background: rgba(255,107,107,0.12); color: var(--red); border: 1px solid rgba(255,107,107,0.25); }
+    .streak-day.skip { background: var(--raised); color: var(--muted); border: 1px solid var(--border); }
+    .streak-day.today { border-color: var(--accent) !important; }
+
+    /* History list */
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-row {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .history-outcome {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      display: grid; place-items: center; font-size: 14px;
+    }
+    .history-outcome.win  { background: rgba(87,255,168,0.1); }
+    .history-outcome.loss { background: rgba(255,107,107,0.08); }
+    .history-outcome.open { background: rgba(232,255,87,0.08); }
+    .history-q { flex: 1; font-size: 13px; font-weight: 500; line-height: 1.3; }
+    .history-q .history-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .history-amt { text-align: right; flex-shrink: 0; }
+    .history-amt .amt-val { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+    .history-amt .amt-val.pos { color: var(--green); }
+    .history-amt .amt-val.neg { color: var(--red); }
+    .history-amt .amt-val.neu { color: var(--muted); }
+    .history-amt .amt-sub { font-size: 11px; color: var(--muted); }
+
+    /* Settings card */
+    .settings-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 14px;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row .row-label { color: var(--sub); }
+    .settings-row .row-val { color: var(--text); font-weight: 500; }
+    .settings-row button {
+      background: none; border: none; cursor: pointer;
+      font-family: 'Outfit', sans-serif; font-size: 13px;
+      font-weight: 500; padding: 6px 12px; border-radius: 7px;
+      transition: background 0.2s;
+    }
+    .settings-row .btn-ghost { color: var(--sub); }
+    .settings-row .btn-ghost:hover { background: var(--raised); color: var(--text); }
+    .settings-row .btn-danger { color: var(--red); }
+    .settings-row .btn-danger:hover { background: rgba(255,107,107,0.08); }
+
+    .empty { text-align: center; padding: 30px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="back-btn" href="index.html">← Back to Game</a>
+  <div class="nav-title">My Stats</div>
+</nav>
+
+<main>
+
+  <!-- Profile -->
+  <div class="profile-hero">
+    <div class="profile-avatar" id="dashAvatar">?</div>
+    <div class="profile-info">
+      <div class="name" id="dashName">Loading…</div>
+      <div class="email" id="dashEmail">—</div>
+      <div class="joined" id="dashJoined">—</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid">
+    <div class="stat-tile">
+      <div class="label">Balance</div>
+      <div class="value accent" id="dashBalance">—</div>
+      <div class="sub">current</div>
+    </div>
+    <div class="stat-tile">
+      <div class="label">Win Rate</div>
+      <div class="value green" id="dashWR">—</div>
+      <div class="sub">of all picks</div>
+    </div>
+    <div class="stat-tile">
+      <div class="label">Total Picks</div>
+      <div class="value" id="dashPicks">—</div>
+      <div class="sub">all time</div>
+    </div>
+    <div class="stat-tile">
+      <div class="label">Streak</div>
+      <div class="value blue" id="dashStreak">—</div>
+      <div class="sub">current 🔥</div>
+    </div>
+  </div>
+
+  <!-- 30-day streak -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-title">30-Day Activity</div>
+    </div>
+    <div class="streak-bar" id="streakBar"></div>
+  </div>
+
+  <!-- History -->
+  <div class="section" style="animation-delay:0.18s">
+    <div class="section-hd">
+      <div class="section-title">Recent Picks</div>
+      <div class="section-count" id="histCount">—</div>
+    </div>
+    <div class="history-list" id="histList"></div>
+  </div>
+
+  <!-- Settings -->
+  <div class="section" style="animation-delay:0.24s">
+    <div class="section-hd"><div class="section-title">Account</div></div>
+    <div class="settings-card">
+      <div class="settings-row">
+        <span class="row-label">Email</span>
+        <span class="row-val" id="settingsEmail">—</span>
+      </div>
+      <div class="settings-row">
+        <span class="row-label">Member since</span>
+        <span class="row-val" id="settingsJoined">—</span>
+      </div>
+      <div class="settings-row">
+        <span class="row-label">Sign out</span>
+        <button class="btn-danger" id="logoutBtn">Sign Out →</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  const supabase = createClient(
+    "https://yjeedgcveawterfpvnuc.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqZWVkZ2N2ZWF3dGVyZnB2bnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzU3MjYsImV4cCI6MjA5MjAxMTcyNn0.nAcKJcUjVZW8-qrPm3n9XDvoqUm4jcD3srZwJkPuUBU",
+    { auth: { persistSession: true, autoRefreshToken: true } }
+  );
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.replace("login.html"); }
+  const user = session.user;
+
+  // Profile
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const p = profile || { balance: 1000, streak: 0, total_picks: 0, correct_picks: 0 };
+
+  const initial = (user.email || "?")[0].toUpperCase();
+  const name    = user.email?.split("@")[0] || "Prophet";
+  const joined  = new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const wr      = p.total_picks > 0 ? Math.round((p.correct_picks / p.total_picks) * 100) + "%" : "—";
+
+  document.getElementById("dashAvatar").textContent  = initial;
+  document.getElementById("dashName").textContent    = name;
+  document.getElementById("dashEmail").textContent   = user.email;
+  document.getElementById("dashJoined").textContent  = "Joined " + joined;
+  document.getElementById("dashBalance").textContent = "$" + Number(p.balance).toLocaleString();
+  document.getElementById("dashWR").textContent      = wr;
+  document.getElementById("dashPicks").textContent   = p.total_picks || 0;
+  document.getElementById("dashStreak").textContent  = (p.streak || 0) + " 🔥";
+  document.getElementById("settingsEmail").textContent  = user.email;
+  document.getElementById("settingsJoined").textContent = joined;
+
+  // 30-day streak bar (random demo data — replace with real data from Supabase)
+  const bar = document.getElementById("streakBar");
+  const today = new Date();
+  const days = ["S","M","T","W","T","F","S"];
+  bar.innerHTML = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(today); d.setDate(d.getDate() - (29 - i));
+    const isToday = i === 29;
+    const rand = Math.random();
+    const cls  = rand > 0.55 ? "win" : rand > 0.35 ? "loss" : "skip";
+    const icon = cls === "win" ? "✓" : cls === "loss" ? "✗" : days[d.getDay()];
+    return `<div class="streak-day ${cls}${isToday ? " today" : ""}" title="${d.toDateString()}">${icon}</div>`;
+  }).join("");
+
+  // History (from localStorage votes — replace with Supabase votes table later)
+  const { data: bets, error } = await supabase
+  .from("bets")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false });
+
+if (error) {
+  histList.innerHTML = `<div class="empty">Failed to load bets 💀</div>`;
+} else if (!bets || bets.length === 0) {
+  histList.innerHTML = `<div class="empty">No picks yet — go make some predictions! 💀</div>`;
+  document.getElementById("histCount").textContent = "0 picks";
+} else {
+  document.getElementById("histCount").textContent = bets.length + " picks";
+
+  histList.innerHTML = bets.map((bet) => {
+    const id = bet.prediction_id;
+    const vote = bet.choice;
+    const wager = bet.amount;
+
+    const title = PRED_TITLES[id] || id;
+
+    return `
+    <div class="history-row">
+      <div class="history-outcome open">⏳</div>
+      <div class="history-q">
+        ${title}
+        <div class="history-sub">
+          You voted <strong>${vote.toUpperCase()}</strong> · Pending
+        </div>
+      </div>
+      <div class="history-amt">
+        <div class="amt-val neu">${wager ? "$" + wager : "—"}</div>
+        <div class="amt-sub">wagered</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+  // Logout
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.replace("login.html");
+  });
+</script>
+</body>
+</html>
