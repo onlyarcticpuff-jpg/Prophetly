@@ -806,11 +806,7 @@ function buildMsgEl(msg) {
   const ci = (msg.username || "?").charCodeAt(0) % colors.length;
 
   const d = document.createElement("div");
-  d.className = `chat-msg\( {mine ? " mine" : ""} \){msg.type === "bet_announce" ? " bet-announce" : ""}`;
-  if (msg.type === "announcement" || msg.type === "system") {
-    d.classList.add("chat-announcement");
-  }
-
+d.className = `chat-msg${mine ? " mine" : ""}${msg.type === "bet_announce" ? " bet-announce" : ""}`;
   d.id = `msg-${msg.id}`;
   d.innerHTML = `
     <div class="chat-avatar" style="background:${colors[ci]};overflow:hidden;padding:0">
@@ -931,7 +927,7 @@ function handleChatCommand(cmd) {
 
 // ====================== SYSTEM & ANNOUNCEMENT HELPERS ======================
 
-function addSystemMessage(text) {
+  function addSystemMessage(text) {
   const msg = {
     id: Date.now(),
     username: "System",
@@ -940,9 +936,13 @@ function addSystemMessage(text) {
     type: "system",
     mine: false
   };
+
   chatLog.push(msg);
-  if (chatPanel.classList.contains("open")) appendMsg(msg);
-}
+
+  if (chatPanel.classList.contains("open")) {
+    appendMsg(msg);
+  }
+  }
 
 function addAnnouncement(text) {
   const msg = {
