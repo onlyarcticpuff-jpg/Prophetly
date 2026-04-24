@@ -278,15 +278,18 @@
   </div>
   <div class="nav-right">
     <div class="balance-pill" id="balancePill">
-      <span>💰</span><span class="amt" id="navBalance">—</span>
+      <span class="nav-balance">
+  <img src="assets/icons/wallet.svg" class="icon">
+  <span class="amt" id="navBalance">—</span>
+      </span>
     </div>
     <div class="chat-toggle-btn" id="chatToggleBtn" title="Global Chat">
-      💬<span class="chat-dot"></span>
+      <img src="assets/icons/message-circle.svg" width="16"><span class="chat-dot"></span>
     </div>
     <div class="avatar" id="avatarBtn">
       <span id="avatarInitial">?</span>
       <div class="avatar-menu" id="avatarMenu">
-        <a href="dashboard.html"><span>📊</span> My Stats</a>
+        <a href="dashboard.html"><span>📊</span>Dashboard</a>
         <a href="#"><span>⚙️</span> Settings</a>
         <button id="logoutBtn" class="danger"><span>🚪</span> Sign Out</button>
       </div>
@@ -491,12 +494,12 @@
       })()
     : "—"
 }</strong> left</span>
-            <span class="pred-stat">✅ <strong>${p.yes_pct}%</strong> YES</span>
+            <span class="pred-stat"> ☑️<strong>${p.yes_pct}%</strong> YES</span>
           </div>
           ${!voted ? `
           <div class="vote-row">
-            <button class="vote-btn yes${choice==="yes"?" selected-yes":""}" data-id="${p.id}" data-vote="yes">✅ YES</button>
-            <button class="vote-btn no${choice==="no"?" selected-no":""}"   data-id="${p.id}" data-vote="no">❌ NO</button>
+            <button class="vote-btn yes${choice==="yes"?" selected-yes":""}" data-id="${p.id}" data-vote="yes"><img src="assets/icons/circle-check.svg" YES</button>
+            <button class="vote-btn no${choice==="no"?" selected-no":""}"   data-id="${p.id}" data-vote="no"><img src="assets/icons/x.svg" width="14"> NO</button>
           </div>
           <div class="wager-section${choice?"":" hidden"}" id="wager-section-${p.id}">
             <div class="wager-top">
