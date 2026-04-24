@@ -479,7 +479,18 @@
           <div class="pred-desc">${p.desc}</div>
           <div class="pred-stats">
             <span class="pred-stat">👥 <strong>${Number(p.total_bets).toLocaleString()}</strong> bets</span>
-            <span class="pred-stat">🕐 <strong>${p.closes_in}</strong> left</span>
+            <span class="pred-stat">🕐 <strong>${
+ p.closes_at
+    ? (() => {
+        const diff = new Date(p.closes_at) - new Date();
+        if (diff <= 0) return "Closed";
+
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff / (1000 * 60)) % 60);
+        return `${h}h ${m}m`;
+      })()
+    : "—"
+}</strong> left</span>
             <span class="pred-stat">✅ <strong>${p.yes_pct}%</strong> YES</span>
           </div>
           ${!voted ? `
