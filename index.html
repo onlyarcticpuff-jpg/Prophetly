@@ -944,22 +944,6 @@ function handleChatCommand(cmd) {
   }
   }
 
-function addAnnouncement(text) {
-  const msg = {
-    id: Date.now(),
-    username: "Announcement",
-    text: text,
-    created_at: new Date(),
-    type: "announcement",
-    mine: false
-  };
-  chatLog.push(msg);
-if (!chatLog.some(m => m.id === newMsg.id)) {
-  chatLog.push(newMsg);
-  if (chatPanel.classList.contains("open")) {
-    appendMsg(newMsg);
-  }
-}
 
 // ====================== BET ANNOUNCEMENT (unchanged logic) ======================
 
@@ -1010,8 +994,12 @@ function initRealtimeChat() {
         const newMsg = payload.new;
         // Avoid duplicate if we just sent it
         if (!chatLog.some(m => m.id === newMsg.id)) {
-          if (chatPanel.classList.contains("open")) {
-          
+  chatLog.push(newMsg);
+  if (chatPanel.classList.contains("open")) {
+    appendMsg(newMsg);
+  }
+        }
+        
           }
         }
       }
@@ -1039,7 +1027,6 @@ initRealtimeChat();
   await loadMyBets();
   await loadPredictions();
   await loadLeaderboard();
-  renderChat();
 </script>
 </body>
 </html>
