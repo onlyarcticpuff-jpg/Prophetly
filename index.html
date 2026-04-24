@@ -575,7 +575,7 @@
     const pred = PREDICTIONS.find(p => p.id === predId);
     const { error } = await supabase.from("bets").insert({
       user_id: user.id, prediction_id: predId,
-      choice, amount, multiplier: pred?.multiplier ?? 1, status: "pending"
+      choice, amount, multiplier: pred?.multiplier ?? 1
     });
 
     if (error) {
