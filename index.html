@@ -650,53 +650,70 @@
 };
 
 /* Place bet (secure) */
-const { error } = await supabase.rpc("place_bet_secure", {
-  p_prediction_id: predId,
-  p_choice: choice,
-  p_amount: amount
-});
+async function placeBet(predId) {
+  const choice = pendingChoice[predId];
+  const amount = parseInt(document.getElementById(`wager-${predId}`)?.value) || 0;
 
-if (error) {
-  console.error("bet error:", error);
-
-  if (error.message?.includes("duplicate")) {
-    showToast("Already bet on this one 💀", "loss");
-  } else if (error.message?.includes("balance")) {
-    showToast("Not enough balance", "loss");
-  } else {
-    showToast("Bet failed — try again", "loss");
+  if (!choice) {
+    showToast("Pick YES or NO first 💀", "loss");
+    return;
   }
 
-  betBtn.classList.remove("loading");
-  betBtn.disabled = false;
-  card.classList.remove("is-submitting");
-  card.querySelectorAll(".vote-btn").forEach(b => b.disabled = false);
-  return;
+  if (!amount || amount <= 0) {
+    showToast("Enter a valid amount", "loss");
+    return;
+  }
+
+  const btn = document.getElementById(`bet-btn-${predId}`);
+  const card = document.getElementById(`card-${predId}`);
+
+  btn?.classList.add("loading");
+  btn.disabled = true;
+  card?.classList.add("is-submitting");
+
+  const { error } = await supabase.rpc("place_bet_secure", {
+    p_prediction_id: predId,
+    p_choice: choice,
+    p_amount: amount
+  });
+
+  if (error) {
+    console.error("bet error:", error);
+
+    showToast(
+      error.message?.includes("balance")
+        ? "Not enough balance"
+        : "Bet failed",
+      "loss"
+    );
+
+    btn?.classList.remove("loading");
+    btn.disabled = false;
+    card?.classList.remove("is-submitting");
+    return;
+  }
+
+  // success
+  myBets[predId] = { choice, amount, status: "pending", payout: null };
+  delete pendingChoice[predId];
+
+  await loadProfile();
+  await loadPredictions();
+
+  showToast(
+    choice === "yes"
+      ? `✅ YES locked! $${amount}`
+      : `❌ NO locked! $${amount}`,
+    "win"
+  );
+
+  pushChatBetAnnounce(
+    profile?.username || user.email?.split("@")[0] || "anon",
+    choice,
+    PREDICTIONS.find(p => p.id === predId)?.question || "a prediction",
+    amount
+  );
 }
-
-/* Success state */
-myBets[predId] = { choice, amount, status: "pending", payout: null };
-delete pendingChoice[predId];
-
-/* Refresh real data */
-await loadProfile();
-await loadPredictions();
-
-/* UI feedback */
-showToast(
-  choice === "yes"
-    ? `✅ YES locked! $${amount} wagered`
-    : `❌ NO locked! $${amount} wagered`,
-  "win"
-);
-
-/* Chat announce */
-pushChatBetAnnounce(
-  profile?.username || user.email?.split("@")[0] || "anon",
-  choice,
-  pred?.question || "a prediction",
-  amount
-);
 
   /* LEADERBOARD */
   async function loadLeaderboard() {
@@ -937,7 +954,11 @@ function addAnnouncement(text) {
     mine: false
   };
   chatLog.push(msg);
-  if (chatPanel.classList.contains("open")) appendMsg(msg);
+if (!chatLog.some(m => m.id === newMsg.id)) {
+  chatLog.push(newMsg);
+  if (chatPanel.classList.contains("open")) {
+    appendMsg(newMsg);
+  }
 }
 
 // ====================== BET ANNOUNCEMENT (unchanged logic) ======================
