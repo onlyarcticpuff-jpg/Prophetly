@@ -107,13 +107,12 @@ align-items:center;
 <div id="histList"></div>
 
 </main>
-
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const supabase = createClient(
   "https://yjeedgcveawterfpvnuc.supabase.co",
-  "YOUR_KEY",
+  "sb_publishable_Z5FbPNQg7OV9yPK8RZDSpg_7FSCM5_n111827",
   { auth: { persistSession: true, autoRefreshToken: true } }
 );
 
@@ -250,6 +249,5 @@ logoutBtn.onclick = async () => {
   window.location.replace("login.html");
 };
 </script>
-
 </body>
 </html>
