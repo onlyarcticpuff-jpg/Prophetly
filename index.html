@@ -715,7 +715,7 @@ async function placeBet(predId) {
   );
 }
 
-  /* LEADERBOARD */
+  /* THE LEADERBOARD */
   async function loadLeaderboard() {
     const { data } = await supabase.from("profiles")
       .select("id,email,username,avatar_url,balance,total_picks,correct_picks")
@@ -749,12 +749,7 @@ async function placeBet(predId) {
     }).join("");
   }
 
-  /* ══════ GLOBAL CHAT ══════
-CREATE TABLE chat_messages (
-  id BIGSERIAL PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  username TEXT NOT NULL,
-  text TEXT NOT NULL,
+  /* ══════ GLOBAL CHAT ═════*\
   created_at TIMESTAMPTZ DEFAULT NOW(),
   type TEXT DEFAULT 'message' CHECK (type IN ('message', 'bet_announce', 'announcement', 'system'))
 );
