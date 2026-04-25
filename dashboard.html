@@ -759,7 +759,7 @@
   async function saveWalletToSupabase(addr) {
     const { error } = await supabase
       .from("profiles")
-      .update({ wallet_adresse: addr })
+      .update({ wallet_address: addr })
       .eq("id", user.id);
     if (error) console.error("Wallet save error:", error);
   }
@@ -767,34 +767,45 @@
   async function clearWalletInSupabase() {
     const { error } = await supabase
       .from("profiles")
-      .update({ wallet_adresse: null })
+      .update({ wallet_address: null })
       .eq("id", user.id);
     if (error) console.error("Wallet clear error:", error);
   }
 
   // Connect handler
-  async function handleConnect() {
-    const provider = window.solana;
-    if (!provider?.isPhantom) {
-      showToast("Phantom wallet not found — install it first");
-      setTimeout(() => window.open("https://phantom.app/", "_blank"), 1200);
-      return;
-    }
-    try {
-      walletNavLabel.textContent = "Connecting…";
-      walletNavBtn.disabled = true;
-      const resp = await provider.connect();
-      const addr = resp.publicKey.toString();
-      walletNavBtn.disabled = false;
-      setWalletConnected(addr);
-      await saveWalletToSupabase(addr);
-      showToast("✅ Wallet connected");
-    } catch (err) {
-      walletNavBtn.disabled = false;
-      walletNavLabel.textContent = "Connect Wallet";
-      if (err.code !== 4001) showToast("❌ Connection failed");
+async function handleConnect() {
+  const provider = window.solana;
+
+  if (!provider?.isPhantom) {
+    showToast("Phantom wallet not found — install it first");
+    setTimeout(() => window.open("https://phantom.app/", "_blank"), 1200);
+    return;
+  }
+
+  try {
+    walletNavLabel.textContent = "Connecting…";
+    walletNavBtn.disabled = true;
+
+    const resp = await provider.connect();
+    const addr = resp.publicKey.toString(); // 👈 FIRST get addr
+
+    p.wallet_address = addr; // 👈 THEN update local state
+
+    walletNavBtn.disabled = false;
+    setWalletConnected(addr);
+
+    await saveWalletToSupabase(addr);
+
+    showToast("✅ Wallet connected");
+  } catch (err) {
+    walletNavBtn.disabled = false;
+    walletNavLabel.textContent = "Connect Wallet";
+
+    if (err.code !== 4001) {
+      showToast("❌ Connection failed");
     }
   }
+}
 
   // Disconnect handler
   async function handleDisconnect() {
@@ -802,6 +813,7 @@
       await window.solana?.disconnect();
     } catch (_) { /* ignore */ }
     setWalletDisconnected();
+    p.wallet_address = null; // 👈 ADD THIS
     await clearWalletInSupabase();
     showToast("Wallet disconnected");
   }
@@ -840,8 +852,8 @@
   walletSectionBtn.onclick = handleConnect;
 
   // Restore from Supabase (already loaded profile)
-  if (p.wallet_adresse) {
-    setWalletConnected(p.wallet_adresse);
+  if (p.wallet_address) {
+    setWalletConnected(p.wallet_address);
   }
 
   // Also listen for Phantom account changes
