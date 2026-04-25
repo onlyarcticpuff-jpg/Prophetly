@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prophetly</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#080b12; --surface:#0e1420; --raised:#131a28;
+      --border:rgba(255,255,255,0.06); --accent:#e8ff57;
+      --green:#57ffa8; --red:#ff6b6b; --blue:#57a8ff; --purple:#c57fff;
+      --text:#f0f2f8; --muted:#4a5568; --sub:#8892a4;
+    }
+    html{height:100%}
+    body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;padding-bottom:100px}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");opacity:.5}
+    .blob{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+    .blob-1{width:500px;height:500px;background:rgba(232,255,87,0.04);top:-200px;right:-100px}
+    .blob-2{width:400px;height:400px;background:rgba(87,160,255,0.04);bottom:-100px;left:-80px}
+    @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes popIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+    @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+    @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    /* NAV.  no */
+    nav{position:sticky;top:0;z-index:200;background:rgba(8,11,18,0.9);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;
+      justify-content:space-between;height:60px;animation:fadeDown .4s ease both}
+    .logo-wrap{display:flex;align-items:center;gap:10px}
+    /* PLACEHOLDER: swap .logo-icon-placeholder for <img src="assets/logo.svg" width="30"> */
+    .logo-icon-placeholder{width:30px;height:30px;border-radius:8px;
+      background:linear-gradient(135deg,var(--accent),var(--green));
+      display:grid;place-items:center;font-size:14px;flex-shrink:0}
+    .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px}
+    .logo span{color:var(--accent)}
+    .nav-right{display:flex;align-items:center;gap:10px}
+    .balance-pill{background:var(--raised);border:1px solid var(--border);border-radius:100px;
+      padding:6px 14px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;
+      transition:border-color .35s,box-shadow .35s}
+    .balance-pill.flash{border-color:rgba(232,255,87,.6);box-shadow:0 0 12px rgba(232,255,87,.15)}
+    .balance-pill .amt{color:var(--accent);font-family:'Syne',sans-serif}
+    .chat-toggle-btn{width:36px;height:36px;border-radius:10px;background:var(--raised);
+      border:1px solid var(--border);display:grid;place-items:center;cursor:pointer;
+      font-size:16px;transition:all .2s;position:relative}
+    .chat-toggle-btn:hover{border-color:rgba(255,255,255,.2);background:#1c2538}
+    .chat-toggle-btn img{filter:brightness(0) invert(1);opacity:.9}
+    .chat-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;
+      background:var(--green);border:1.5px solid var(--bg)}
+    /* PLACEHOLDER: swap .avatar span for <img src="[user.avatar_url]"> */
+    .avatar{width:34px;height:34px;border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),#57ffa8);
+      display:grid;place-items:center;font-size:13px;font-weight:700;color:#080b12;
+      cursor:pointer;flex-shrink:0;position:relative}
+    .avatar-menu{position:absolute;top:calc(100% + 10px);right:0;background:var(--surface);
+      border:1px solid var(--border);border-radius:12px;padding:6px;min-width:165px;z-index:300;
+      box-shadow:0 16px 40px rgba(0,0,0,.55);display:none}
+    .avatar-menu.open{display:block;animation:popIn .18s ease}
+    .avatar-menu a,.avatar-menu button{display:flex;align-items:center;gap:8px;width:100%;
+      text-align:left;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;
+      color:var(--sub);background:none;border:none;cursor:pointer;text-decoration:none;
+      transition:background .15s,color .15s;font-family:'Outfit',sans-serif}
+    .avatar-menu a:hover,.avatar-menu button:hover{background:var(--raised);color:var(--text)}
+    .avatar-menu .danger{color:var(--red)}
+    .avatar-menu .danger:hover{background:rgba(255,107,107,.08)}
+
+    /* MAIN */
+    main{max-width:700px;margin:0 auto;padding:28px 18px 0;position:relative;z-index:1}
+    .hero{margin-bottom:24px;animation:fadeUp .45s .05s ease both}
+    .hero-date{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .hero-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1.15}
+    .hero-title em{color:var(--accent);font-style:normal}
+
+    /* CATEGORIES */
+    /* PLACEHOLDER: swap emoji inside .cat-btn for <img src="assets/icons/[cat].svg" class="cat-icon" width="14"> */
+    .cat-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;
+      margin-bottom:22px;animation:fadeUp .45s .1s ease both}
+    .cat-row::-webkit-scrollbar{display:none}
+    .cat-btn{flex-shrink:0;padding:7px 15px;background:var(--surface);border:1px solid var(--border);
+      border-radius:100px;color:var(--sub);font-family:'Outfit',sans-serif;font-size:13px;
+      font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+    .cat-btn:hover{border-color:rgba(255,255,255,.15);color:var(--text)}
+    .cat-btn.active{background:var(--accent);border-color:var(--accent);color:#080b12;font-weight:600}
+    .section-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;
+      letter-spacing:1px;margin-bottom:12px}
+
+    /* PREDICTION CARDS */
+    .predictions{display:flex;flex-direction:column;gap:14px;margin-bottom:32px}
+    .pred-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;
+      overflow:hidden;transition:border-color .2s,box-shadow .2s;animation:fadeUp .4s ease both}
+    .pred-card:hover{border-color:rgba(255,255,255,.11);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    .pred-card.is-voted{border-color:rgba(255,255,255,.07)}
+    .pred-card.is-submitting{pointer-events:none;opacity:.8}
+    .pred-inner{padding:20px}
+    .pred-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .pred-cat{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;
+      padding:3px 9px;border-radius:100px;display:flex;align-items:center;gap:4px}
+    .cat-weather{background:rgba(87,168,255,.12);color:var(--blue);border:1px solid rgba(87,168,255,.2)}
+    .cat-sports{background:rgba(87,255,168,.1);color:var(--green);border:1px solid rgba(87,255,168,.2)}
+    .cat-dumb{background:rgba(232,255,87,.1);color:var(--accent);border:1px solid rgba(232,255,87,.2)}
+    .cat-finance{background:rgba(255,107,107,.1);color:var(--red);border:1px solid rgba(255,107,107,.2)}
+    .cat-tech{background:rgba(180,87,255,.1);color:var(--purple);border:1px solid rgba(180,87,255,.2)}
+    .pred-odds{font-size:12px;color:var(--muted)}
+    .pred-odds strong{color:var(--text);font-family:'Syne',sans-serif}
+    .pred-question{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;line-height:1.3;margin-bottom:6px}
+    .pred-desc{font-size:13px;color:var(--sub);margin-bottom:16px;line-height:1.5}
+    .pred-stats{display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+    .pred-stat{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+    .pred-stat strong{color:var(--sub);font-weight:500}
+
+    /* YES/NO buttons */
+    .vote-row{display:flex;gap:8px;margin-bottom:14px}
+    .vote-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);
+      background:var(--raised);color:var(--sub);font-family:'Outfit',sans-serif;
+      font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}
+    .vote-btn:hover:not(:disabled){transform:translateY(-1px)}
+    .vote-btn.yes:hover:not(:disabled){background:rgba(87,255,168,.12);border-color:rgba(87,255,168,.4);color:var(--green)}
+    .vote-btn.no:hover:not(:disabled){background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.4);color:var(--red)}
+    .vote-btn.selected-yes{background:rgba(87,255,168,.15);border-color:rgba(87,255,168,.6);color:var(--green);font-weight:700}
+    .vote-btn.selected-no{background:rgba(255,107,107,.12);border-color:rgba(255,107,107,.6);color:var(--red);font-weight:700}
+    .vote-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+    /* Wager section */
+    .wager-section{background:var(--raised);border-radius:12px;padding:14px;margin-bottom:12px;
+      animation:slideIn .22s ease both}
+    .wager-section.hidden{display:none}
+    .wager-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .wager-label{font-size:12px;color:var(--muted);font-weight:500;flex-shrink:0}
+    .wager-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+      padding:8px 12px;color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;
+      font-weight:600;outline:none;transition:border-color .2s}
+    .wager-input::placeholder{color:var(--muted);font-weight:400}
+    .wager-input:focus{border-color:rgba(232,255,87,.35)}
+    .wager-quick{display:flex;gap:5px}
+    .wager-quick button{flex:1;padding:6px 0;background:var(--surface);border:1px solid var(--border);
+      border-radius:7px;color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;
+      transition:all .15s;font-family:'Outfit',sans-serif}
+    .wager-quick button:hover{background:rgba(232,255,87,.08);border-color:rgba(232,255,87,.3);color:var(--accent)}
+    .payout-preview{display:flex;align-items:center;justify-content:space-between;
+      padding-top:10px;margin-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+    .payout-val{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--green)}
+
+    /* BET button */
+    .bet-btn{width:100%;padding:13px;border-radius:11px;background:var(--accent);border:none;
+      color:#080b12;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;
+      transition:opacity .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 24px rgba(232,255,87,.2);
+      display:flex;align-items:center;justify-content:center;gap:8px}
+    .bet-btn:hover:not(:disabled){opacity:.9;transform:translateY(-1px);box-shadow:0 8px 32px rgba(232,255,87,.3)}
+    .bet-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+    .bet-btn.hidden{display:none}
+    .btn-spinner{width:14px;height:14px;border:2px solid rgba(8,11,18,.3);border-top-color:#080b12;
+      border-radius:50%;animation:spin .7s linear infinite;display:none}
+    .bet-btn.loading .btn-spinner{display:inline-block}
+    .bet-btn.loading .btn-text{display:none}
+
+    /* Voted banner */
+    .voted-banner{background:var(--raised);border-top:1px solid var(--border);padding:14px 20px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .voted-badge{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+    .voted-badge.yes .vb-label{color:var(--green)}
+    .voted-badge.no .vb-label{color:var(--red)}
+    .voted-amount{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--accent)}
+    .voted-status{font-size:11px;color:var(--muted);margin-top:3px}
+
+    /* LEADERBOARD */
+    .lb-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+      overflow:hidden;margin-bottom:32px;animation:fadeUp .45s .25s ease both}
+    .lb-header{padding:16px 20px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between}
+    .lb-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+    .lb-sub{font-size:12px;color:var(--muted)}
+    .lb-row{display:flex;align-items:center;gap:14px;padding:13px 20px;
+      border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s}
+    .lb-row:last-child{border-bottom:none}
+    .lb-row:hover{background:var(--raised)}
+    .lb-row.me{background:rgba(232,255,87,.04)}
+    .lb-rank{width:24px;text-align:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);flex-shrink:0}
+    .lb-rank.gold{color:#ffd700}.lb-rank.silver{color:#c0c0c0}.lb-rank.bronze{color:#cd7f32}
+    /* PLACEHOLDER: swap .lb-avatar for <img src="[avatar_url]"> */
+    .lb-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:grid;
+      place-items:center;font-size:12px;font-weight:700;color:#080b12}
+    .lb-name{flex:1;font-size:14px;font-weight:500}
+    .lb-name .you{font-size:11px;color:var(--accent);margin-left:6px}
+    .lb-stats{text-align:right}
+    .lb-bal{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--accent)}
+    .lb-wr{font-size:11px;color:var(--muted)}
+
+    /* CHAT PANEL
+     * REAL-TIME UPGRADE PATH:
+     * 1. Table: chat_messages(id uuid, user_id uuid, username text, text text, created_at timestamptz, type text)
+     * 2. Load: supabase.from('chat_messages').select('*').order('created_at').limit(50)
+     * 3. Subscribe: supabase.channel('chat').on('postgres_changes',{event:'INSERT',...}, cb).subscribe()
+     * 4. Send: supabase.from('chat_messages').insert({user_id, username, text, type:'message'})
+     * 5. Delete pushFakeReply() — real replies auto-arrive via subscription
+     */
+    .chat-panel{position:fixed;right:0;bottom:0;top:60px;width:320px;z-index:150;
+      background:var(--surface);border-left:1px solid var(--border);
+      display:flex;flex-direction:column;
+      transform:translateX(100%);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+    .chat-panel.open{transform:translateX(0)}
+    .chat-header{padding:16px 18px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .chat-header-left{display:flex;align-items:center;gap:10px}
+    .chat-live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+    .chat-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+    .chat-online{font-size:11px;color:var(--muted)}
+    .chat-close{background:none;border:none;color:var(--muted);cursor:pointer;
+      font-size:20px;padding:2px 6px;line-height:1;transition:color .15s}
+    .chat-close:hover{color:var(--text)}
+    .chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;
+      gap:10px;scrollbar-width:thin;scrollbar-color:var(--raised) transparent}
+    .chat-messages::-webkit-scrollbar{width:4px}
+    .chat-messages::-webkit-scrollbar-thumb{background:var(--raised);border-radius:4px}
+    .chat-msg{display:flex;gap:9px;animation:fadeUp .2s ease both}
+    .chat-msg.mine{flex-direction:row-reverse}
+    /* PLACEHOLDER: swap .chat-avatar for <img src="[avatar_url]"> */
+    .chat-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:grid;
+      place-items:center;font-size:11px;font-weight:700;color:#080b12}
+    .chat-bubble-wrap{display:flex;flex-direction:column;gap:3px;max-width:76%}
+    .chat-msg.mine .chat-bubble-wrap{align-items:flex-end}
+    .chat-username{font-size:10px;color:var(--muted);font-weight:500;padding:0 4px}
+    .chat-bubble{background:var(--raised);border-radius:12px 12px 12px 3px;padding:9px 12px;
+      font-size:13px;line-height:1.45;color:var(--text);word-break:break-word}
+    .chat-msg.mine .chat-bubble{background:rgba(232,255,87,.1);border-radius:12px 12px 3px 12px}
+    .chat-msg.bet-announce .chat-bubble{background:rgba(87,255,168,.07);
+      border:1px solid rgba(87,255,168,.15);font-size:12px;color:var(--sub)}
+    .chat-ts{font-size:10px;color:var(--muted);padding:0 4px}
+    .chat-date-chip{text-align:center;font-size:10px;color:var(--muted);position:relative;margin:4px 0}
+    .chat-date-chip span{background:var(--surface);padding:0 10px;position:relative;z-index:1}
+    .chat-date-chip::before{content:'';position:absolute;left:0;right:0;top:50%;
+      border-top:1px solid var(--border);z-index:0}
+    .chat-input-wrap{padding:12px 14px;border-top:1px solid var(--border);
+      display:flex;gap:8px;flex-shrink:0}
+    .chat-input{flex:1;background:var(--raised);border:1px solid var(--border);border-radius:10px;
+      padding:9px 13px;color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;
+      outline:none;transition:border-color .2s}
+    .chat-input::placeholder{color:var(--muted)}
+    .chat-input:focus{border-color:rgba(232,255,87,.3)}
+    /* PLACEHOLDER: swap .chat-send inner emoji for <img src="assets/icons/send.svg"> */
+    .chat-send{width:36px;height:36px;border-radius:10px;background:var(--accent);border:none;
+      color:#080b12;font-size:15px;cursor:pointer;display:grid;place-items:center;
+      flex-shrink:0;transition:opacity .2s,transform .15s}
+    .chat-send:hover{opacity:.88;transform:scale(1.05)}
+
+    /* TOAST */
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);
+      background:var(--surface);border:1px solid var(--border);border-radius:10px;
+      padding:11px 20px;font-size:13px;font-weight:500;color:var(--text);
+      box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:9999;
+      transition:transform .3s cubic-bezier(.22,1,.36,1);white-space:nowrap;pointer-events:none}
+    #toast.show{transform:translateX(-50%) translateY(0)}
+    #toast.win{color:var(--green);border-color:rgba(87,255,168,.3)}
+    #toast.loss{color:var(--red);border-color:rgba(255,107,107,.3)}
+    #toast.info{color:var(--accent);border-color:rgba(232,255,87,.3)}
+
+    /* ── SVG icon system ── */
+    .icon{display:inline-block;vertical-align:middle;flex-shrink:0}
+    /* nav wallet */
+    .nav-balance .icon{width:13px;height:13px;filter:invert(1) brightness(.6);margin-right:2px;position:relative;top:-1px}
+    /* logo zap */
+    .logo-icon-placeholder .icon{width:18px;height:18px;filter:brightness(0) invert(0)}
+    /* avatar menu icons */
+    .avatar-menu .menu-icon{width:14px;height:14px;filter:invert(1) brightness(.55);flex-shrink:0}
+    /* category button icons */
+    .cat-icon{width:13px;height:13px;filter:invert(1) brightness(.55);flex-shrink:0;transition:filter .2s}
+    .cat-btn.active .cat-icon{filter:brightness(0) invert(0)}
+    .cat-btn:hover:not(.active) .cat-icon{filter:invert(1) brightness(.75)}
+    /* pred-cat badge icons */
+    .badge-icon{width:11px;height:11px;flex-shrink:0}
+    .cat-weather .badge-icon{filter:invert(62%) sepia(80%) saturate(500%) hue-rotate(190deg)}
+    .cat-sports  .badge-icon{filter:invert(85%) sepia(40%) saturate(400%) hue-rotate(100deg)}
+    .cat-dumb    .badge-icon{filter:invert(95%) sepia(60%) saturate(600%) hue-rotate(10deg)}
+    .cat-finance .badge-icon{filter:invert(55%) sepia(80%) saturate(600%) hue-rotate(320deg)}
+    .cat-tech    .badge-icon{filter:invert(65%) sepia(60%) saturate(500%) hue-rotate(240deg)}
+    /* pred-stat icons */
+    .stat-icon{width:12px;height:12px;filter:invert(1) brightness(.45);flex-shrink:0;position:relative;top:1px}
+    /* vote button icons */
+    .vote-icon{width:14px;height:14px;flex-shrink:0}
+    .vote-btn.yes .vote-icon,.vote-btn.selected-yes .vote-icon{filter:invert(85%) sepia(40%) saturate(400%) hue-rotate(100deg)}
+    .vote-btn.no  .vote-icon,.vote-btn.selected-no  .vote-icon{filter:invert(55%) sepia(80%) saturate(600%) hue-rotate(320deg)}
+    .vote-btn:not(.selected-yes):not(.selected-no) .vote-icon{filter:invert(1) brightness(.45)}
+    /* voted-banner icons */
+    .vb-icon{width:14px;height:14px;flex-shrink:0}
+    .voted-badge.yes .vb-icon{filter:invert(85%) sepia(40%) saturate(400%) hue-rotate(100deg)}
+    .voted-badge.no  .vb-icon{filter:invert(55%) sepia(80%) saturate(600%) hue-rotate(320deg)}
+    /* status icons */
+    .status-icon{width:12px;height:12px;flex-shrink:0;position:relative;top:1px}
+    .status-won  .status-icon{filter:invert(85%) sepia(40%) saturate(400%) hue-rotate(100deg)}
+    .status-lost .status-icon{filter:invert(55%) sepia(80%) saturate(600%) hue-rotate(320deg)}
+    .status-pend .status-icon{filter:invert(1) brightness(.5)}
+    /* chat send icon */
+    .chat-send .icon{width:15px;height:15px;filter:brightness(1)}
+    /* lb trophy */
+    .lb-trophy{width:13px;height:13px;filter:invert(85%) sepia(40%) saturate(400%) hue-rotate(10deg);vertical-align:middle;margin-left:4px}
+
+    .empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
+    .section-divider{border:none;border-top:1px solid var(--border);margin:28px 0}
+    .hidden{display:none!important}
+    .skel{background:linear-gradient(90deg,var(--surface) 25%,var(--raised) 50%,var(--surface) 75%);
+      background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px}
+    @media(max-width:640px){.chat-panel{width:100%}}
+
+    /* ── HOMEPAGE IMPROVEMENTS ── */
+    .hero-eyebrow{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;
+      margin-bottom:8px;display:flex;align-items:center;gap:8px}
+    .live-chip{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.25);
+      color:var(--red);border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;
+      display:flex;align-items:center;gap:4px;letter-spacing:.5px}
+    .live-dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:pulse 1.5s infinite}
+    .hero-subtitle{font-size:14px;color:var(--sub);margin-top:8px;font-weight:300}
+
+    /* Quick stats banner */
+    .stats-banner{display:flex;gap:8px;margin-bottom:22px;animation:fadeUp .45s .15s ease both;overflow-x:auto;scrollbar-width:none}
+    .stats-banner::-webkit-scrollbar{display:none}
+    .stat-chip{flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px;min-width:90px}
+    .stat-chip-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+    .stat-chip-val.green{color:var(--green)}
+    .stat-chip-val.accent{color:var(--accent)}
+    .stat-chip-val.blue{color:var(--blue)}
+    .stat-chip-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+
+    /* Prediction cards — make header clickable */
+    .pred-click-zone{cursor:pointer;transition:background .15s}
+    .pred-click-zone:hover .pred-question{color:var(--accent)}
+    .pred-expand-hint{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;
+      margin-top:4px;opacity:0;transition:opacity .2s}
+    .pred-card:hover .pred-expand-hint{opacity:1}
+    .expand-arrow{font-size:9px;transition:transform .2s}
+
+    /* Yes/no visual bar */
+    .yn-bar{height:4px;border-radius:100px;background:var(--raised);margin-bottom:14px;overflow:hidden;display:flex}
+    .yn-yes{height:100%;background:var(--green);opacity:.7;border-radius:100px 0 0 100px;transition:width .6s ease}
+    .yn-no {height:100%;background:var(--red);opacity:.55;border-radius:0 100px 100px 0;transition:width .6s ease}
+
+    /* ── PREDICTION DETAIL DRAWER ── */
+    .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;
+      opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(4px)}
+    .drawer-overlay.open{opacity:1;pointer-events:auto}
+    .drawer{position:fixed;bottom:0;left:0;right:0;z-index:401;
+      background:var(--surface);border-top:1px solid var(--border);
+      border-radius:20px 20px 0 0;
+      max-height:92vh;overflow-y:auto;
+      transform:translateY(100%);transition:transform .35s cubic-bezier(.22,1,.36,1)}
+    .drawer.open{transform:translateY(0)}
+    .drawer-handle{width:36px;height:4px;border-radius:100px;background:var(--border);
+      margin:14px auto 0}
+    .drawer-inner{padding:20px 20px 40px;max-width:640px;margin:0 auto}
+
+    .drawer-cat{margin-bottom:14px}
+    .drawer-question{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+      line-height:1.25;margin-bottom:10px}
+    .drawer-desc{font-size:14px;color:var(--sub);line-height:1.6;margin-bottom:20px}
+
+    /* Key info row */
+    .drawer-info-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+    .info-tile{background:var(--raised);border:1px solid var(--border);border-radius:12px;
+      padding:12px 14px;flex:1;min-width:100px}
+    .info-tile-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+    .info-tile-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800}
+    .info-tile-val.green{color:var(--green)}
+    .info-tile-val.red{color:var(--red)}
+    .info-tile-val.accent{color:var(--accent)}
+    .info-tile-val.blue{color:var(--blue)}
+
+    /* Bet distribution chart */
+    .chart-section{margin-bottom:24px}
+    .chart-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+      color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+    .chart-wrap{background:var(--raised);border-radius:14px;padding:18px;border:1px solid var(--border)}
+    .chart-bars{display:flex;align-items:flex-end;gap:4px;height:100px;margin-bottom:10px}
+    .chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+    .chart-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .5s ease}
+    .chart-bar.yes-bar{background:var(--green);opacity:.75}
+    .chart-bar.no-bar{background:var(--red);opacity:.6}
+    .chart-bar-lbl{font-size:9px;color:var(--muted)}
+    .chart-legend{display:flex;gap:14px;justify-content:center}
+    .chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)}
+    .legend-swatch{width:10px;height:10px;border-radius:2px}
+
+    /* Participation gauge */
+    .gauge-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .gauge-label{font-size:12px;color:var(--sub);min-width:32px;text-align:right}
+    .gauge-track{flex:1;height:8px;background:var(--raised);border-radius:100px;overflow:hidden}
+    .gauge-fill{height:100%;border-radius:100px;transition:width .7s ease}
+    .gauge-yes .gauge-fill{background:linear-gradient(90deg,var(--green),rgba(87,255,168,.6))}
+    .gauge-no  .gauge-fill{background:linear-gradient(90deg,var(--red),rgba(255,107,107,.6))}
+    .gauge-pct{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;min-width:34px}
+    .gauge-pct.green{color:var(--green)}
+    .gauge-pct.red{color:var(--red)}
+
+    /* Drawer betting UI */
+    .drawer-bet-section{background:var(--bg);border:1px solid var(--border);
+      border-radius:16px;padding:20px;margin-top:8px}
+    .drawer-bet-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+      margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .drawer-bet-voted{display:flex;align-items:center;justify-content:space-between;
+      padding:14px;background:var(--raised);border-radius:12px;border:1px solid var(--border)}
+    .drawer-voted-info{font-size:13px;font-weight:600}
+    .drawer-voted-badge{display:flex;align-items:center;gap:6px}
+    .drawer-voted-badge.yes .dvb-txt{color:var(--green)}
+    .drawer-voted-badge.no  .dvb-txt{color:var(--red)}
+    .drawer-voted-amount{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--accent)}
+
+    /* History of odds (fake ticker) */
+    .odds-ticker{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-top:8px}
+    .odds-ticker::-webkit-scrollbar{display:none}
+    .odds-tick{flex-shrink:0;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+      padding:4px 8px;border-radius:6px;border:1px solid var(--border);color:var(--muted)}
+    .odds-tick.up{color:var(--green);border-color:rgba(87,255,168,.2);background:rgba(87,255,168,.06)}
+    .odds-tick.dn{color:var(--red);border-color:rgba(255,107,107,.2);background:rgba(255,107,107,.05)}
+
+    @keyframes drawerIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+  </style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div id="toast"></div>
+
+<nav>
+  <div class="logo-wrap">
+    <div class="logo-icon-placeholder"><img src="assets/icons/zap.svg" class="icon"></div>
+    <div class="logo">Prophet<span>ly</span></div>
+  </div>
+  <div class="nav-right">
+    <div class="balance-pill" id="balancePill">
+      <span class="nav-balance">
+  <img src="/assets/icons/wallet.svg" class="icon">
+  <span class="amt" id="navBalance">—</span>
+      </span>
+    </div>
+    <div class="chat-toggle-btn" id="chatToggleBtn" title="Global Chat">
+      <img src="/assets/icons/message-circle.svg" width="16"><span class="chat-dot"></span>
+    </div>
+    <div class="avatar" id="avatarBtn">
+      <img id="avatarImg" src="" style="display:none;width:34px;height:34px;border-radius:50%;object-fit:cover;position:absolute;inset:0">
+      <span id="avatarInitial">?</span>
+      <div class="avatar-menu" id="avatarMenu">
+        <a href="dashboard.html"><img src="/assets/icons/gauge.svg" class="menu-icon">Dashboard</a>
+        <a href="settings.html"><img src="/assets/icons/bolt.svg" class="menu-icon"> Settings</a>
+        <button id="logoutBtn" class="danger"><img src="/assets/icons/x.svg" class="menu-icon"> Sign Out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span class="live-chip"><span class="live-dot"></span>LIVE</span>
+      <span id="heroDate">—</span>
+    </div>
+    <div class="hero-title">Today's <em>Predictions</em></div>
+    <div class="hero-subtitle">Pick sides, wager tokens, climb the board.</div>
+  </div>
+
+  <!-- Quick stats banner -->
+  <div class="stats-banner" id="statsBanner">
+    <div class="stat-chip">
+      <span class="stat-chip-val accent" id="sbBalance">—</span>
+      <span class="stat-chip-lbl">Balance</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-chip-val green" id="sbWon">—</span>
+      <span class="stat-chip-lbl">Won</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-chip-val blue" id="sbPicks">—</span>
+      <span class="stat-chip-lbl">Picks</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-chip-val" id="sbLive">—</span>
+      <span class="stat-chip-lbl">Live now</span>
+    </div>
+  </div>
+
+  <div class="cat-row" id="catRow">
+    <button class="cat-btn active" data-cat="all"><img src="/assets/icons/zap.svg" class="cat-icon"> All</button>
+    <button class="cat-btn" data-cat="weather"><img src="/assets/icons/cloud-lightning.svg" class="cat-icon"> Weather</button>
+    <button class="cat-btn" data-cat="sports"><img src="/assets/icons/sport-shoe.svg" class="cat-icon"> Sports</button>
+    <button class="cat-btn" data-cat="finance"><img src="/assets/icons/badge-dollar-sign.svg" class="cat-icon"> Finance</button>
+    <button class="cat-btn" data-cat="tech"><img src="/assets/icons/cpu.svg" class="cat-icon"> Tech</button>
+    <button class="cat-btn" data-cat="dumb"><img src="/assets/icons/skull.svg" class="cat-icon"> Dumb Stuff</button>
+  </div>
+
+  <div class="section-label">LIVE NOW</div>
+  <div class="predictions" id="predList">
+    <div class="pred-card" style="opacity:.35;pointer-events:none">
+      <div class="pred-inner">
+        <div class="skel" style="height:11px;width:70px;margin-bottom:14px"></div>
+        <div class="skel" style="height:18px;width:85%;margin-bottom:8px"></div>
+        <div class="skel" style="height:12px;width:60%;margin-bottom:18px"></div>
+        <div class="skel" style="height:42px;width:100%"></div>
+      </div>
+    </div>
+    <div class="pred-card" style="opacity:.2;pointer-events:none">
+      <div class="pred-inner">
+        <div class="skel" style="height:11px;width:80px;margin-bottom:14px"></div>
+        <div class="skel" style="height:18px;width:75%;margin-bottom:8px"></div>
+        <div class="skel" style="height:12px;width:55%;margin-bottom:18px"></div>
+        <div class="skel" style="height:42px;width:100%"></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+  <div class="section-label">LEADERBOARD</div>
+  <div class="lb-card">
+    <div class="lb-header">
+      <div class="lb-title">Top Prophets</div>
+      <div class="lb-sub">All time <img src="/assets/icons/badge-dollar-sign.svg" class="lb-trophy"></div>
+    </div>
+    <div id="lbList"><div class="empty" style="padding:20px;font-size:13px">Loading…</div></div>
+  </div>
+</main>
+
+<!-- GLOBAL CHAT PANEL -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div class="chat-header-left">
+      <div class="chat-live-dot"></div>
+      <div>
+        <div class="chat-title">Global Chat</div>
+        <div class="chat-online" id="chatOnline">— online</div>
+      </div>
+    </div>
+    <button class="chat-close" id="chatCloseBtn">×</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-wrap">
+    <input class="chat-input" id="chatInput" type="text" maxlength="280" placeholder="Say something…" />
+    <button class="chat-send" id="chatSend"><img src="/assets/icons/send-horizontal.svg" class="icon"></button>
+  </div>
+</div>
+
+<!-- PREDICTION DETAIL DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="predDrawer" role="dialog" aria-modal="true">
+  <div class="drawer-handle"></div>
+  <div class="drawer-inner" id="drawerInner">
+    <!-- injected by openDrawer() -->
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+  const supabase = createClient(
+    "https://yjeedgcveawterfpvnuc.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqZWVkZ2N2ZWF3dGVyZnB2bnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzU3MjYsImV4cCI6MjA5MjAxMTcyNn0.nAcKJcUjVZW8-qrPm3n9XDvoqUm4jcD3srZwJkPuUBU",
+    { auth: { persistSession: true, autoRefreshToken: true } }
+  );
+
+  /* AUTH */
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.replace("login.html"); }
+  const user = session.user;
+
+  /* PROFILE */
+  let profile = null;
+  async function loadProfile() {
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    if (!data) {
+      const { data: c } = await supabase.from("profiles")
+        .insert({ id: user.id, email: user.email, balance: 1000, streak: 0, total_picks: 0, correct_picks: 0 })
+        .select().single();
+      profile = c;
+    } else { profile = data; }
+    renderBalance();
+    renderAvatar();
+  }
+  function renderBalance(flash = false) {
+    if (!profile) return;
+    document.getElementById("navBalance").textContent = "$" + Number(profile.balance).toLocaleString();
+    // Stats banner
+    document.getElementById("sbBalance").textContent = "$" + Number(profile.balance).toLocaleString();
+    document.getElementById("sbPicks").textContent   = profile.total_picks || 0;
+    const wr = profile.total_picks > 0
+      ? Math.round((profile.correct_picks || 0) / profile.total_picks * 100) + "%"
+      : "—";
+    document.getElementById("sbWon").textContent = wr;
+    if (flash) {
+      const p = document.getElementById("balancePill");
+      p.classList.add("flash"); setTimeout(() => p.classList.remove("flash"), 700);
+    }
+  }
+
+  /* NAV */
+  function renderAvatar() {
+    const name = profile?.username || user.email?.split("@")[0] || "?";
+    const img  = document.getElementById("avatarImg");
+    const init = document.getElementById("avatarInitial");
+    if (profile?.avatar_url) {
+      img.src = profile.avatar_url;
+      img.style.display = "block";
+      init.style.display = "none";
+    } else {
+      img.style.display = "none";
+      init.style.display = "";
+      init.textContent = name[0].toUpperCase();
+    }
+  }
+  renderAvatar();
+  document.getElementById("avatarBtn").addEventListener("click", e => {
+    e.stopPropagation(); document.getElementById("avatarMenu").classList.toggle("open");
+  });
+  document.addEventListener("click", () => document.getElementById("avatarMenu").classList.remove("open"));
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await supabase.auth.signOut(); window.location.replace("login.html");
+  });
+  document.getElementById("heroDate").textContent = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+
+  /* TOAST */
+  const toastEl = document.getElementById("toast");
+  let tt;
+  function showToast(msg, type = "") {
+    toastEl.className = type; toastEl.textContent = msg;
+    void toastEl.offsetWidth; toastEl.classList.add("show");
+    clearTimeout(tt); tt = setTimeout(() => toastEl.classList.remove("show"), 3500);
+  }
+
+  /* PREDICTIONS */
+  let PREDICTIONS = [];
+  const FALLBACK = [
+    { id:"p1", category:"weather",  question:"Will it rain in NYC today?",                         desc:"Measurable precipitation before midnight?",               yes_pct:62, total_bets:1847, closes_in:"4h 20m", multiplier:1.6  },
+    { id:"p2", category:"sports",   question:"Will the Lakers win tonight?",                       desc:"Lakers vs Celtics. LeBron questionable.",                 yes_pct:45, total_bets:3204, closes_in:"6h",     multiplier:2.2  },
+    { id:"p3", category:"dumb",     question:"Will Elon tweet something wild before noon?",        desc:"Historically 80% of days. You know the deal.",           yes_pct:81, total_bets:9102, closes_in:"2h 45m", multiplier:1.2  },
+    { id:"p4", category:"finance",  question:"Will BTC close above $70k today?",                   desc:"Bitcoin near resistance. Bulls vs bears.",                yes_pct:38, total_bets:5670, closes_in:"8h",     multiplier:2.6  },
+    { id:"p5", category:"tech",     question:"Will Apple announce something at WWDC?",             desc:"Leaks suggest a major AI drop. Will it land?",            yes_pct:73, total_bets:2100, closes_in:"3d",     multiplier:1.4  },
+    { id:"p6", category:"dumb",     question:"Will someone leave a 1★ on a 5★ restaurant today?", desc:"Gary does this daily. Clockwork. 💀",                    yes_pct:92, total_bets:422,  closes_in:"12h",    multiplier:1.08 },
+    { id:"p7", category:"sports",   question:"Walk-off home run in MLB today?",                    desc:"Any game. Walk-off homer in 9th or later.",              yes_pct:29, total_bets:1388, closes_in:"10h",    multiplier:3.4  },
+    { id:"p8", category:"weather",  question:"Will it snow anywhere in Florida today?",            desc:"All 67 counties count. Even the panhandle.",             yes_pct:3,  total_bets:887,  closes_in:"12h",    multiplier:33   },
+  ];
+
+  async function loadPredictions() {
+    const { data, error } = await supabase.from("predictions").select("*");
+    PREDICTIONS = (data && data.length) ? data : FALLBACK;
+    if (error) console.warn("predictions table not found — using fallback data");
+    document.getElementById("sbLive").textContent = PREDICTIONS.length;
+    renderPredictions();
+  }
+
+  /* MY BETS */
+  let myBets = {};
+  async function loadMyBets() {
+    const { data, error } = await supabase.from("bets")
+      .select("prediction_id,choice,amount,status,payout").eq("user_id", user.id);
+    if (error) { console.error("bets:", error.message); return; }
+    myBets = {};
+    (data || []).forEach(b => { myBets[b.prediction_id] = b; });
+  }
+
+  /* CATEGORY FILTER */
+  let activeCat = "all";
+  document.getElementById("catRow").addEventListener("click", e => {
+    const btn = e.target.closest(".cat-btn"); if (!btn) return;
+    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active"); activeCat = btn.dataset.cat; renderPredictions();
+  });
+
+  const CAT_CLASS = {weather:"cat-weather",sports:"cat-sports",dumb:"cat-dumb",finance:"cat-finance",tech:"cat-tech"};
+  const CAT_LABEL = {
+    weather:`<img src="/assets/icons/cloud-lightning.svg" class="badge-icon"> Weather`,
+    sports: `<img src="/assets/icons/sport-shoe.svg" class="badge-icon"> Sports`,
+    dumb:   `<img src="/assets/icons/skull.svg" class="badge-icon"> Dumb Stuff`,
+    finance:`<img src="/assets/icons/badge-dollar-sign.svg" class="badge-icon"> Finance`,
+    tech:   `<img src="/assets/icons/cpu.svg" class="badge-icon"> Tech`
+  };
+
+  /* Track YES/NO choice before hitting BET */
+  const pendingChoice = {};
+
+  /* RENDER PREDICTIONS */
+  function renderPredictions() {
+    const list = document.getElementById("predList");
+    const show = activeCat === "all" ? PREDICTIONS : PREDICTIONS.filter(p => p.category === activeCat);
+    if (!show.length) { list.innerHTML = `<div class="empty">Nothing here yet 💀</div>`; return; }
+
+    list.innerHTML = show.map((p, i) => {
+      const bet    = myBets[p.id];
+      const voted  = !!bet;
+      const choice = pendingChoice[p.id] || null;
+      const bal    = profile?.balance ?? 1000;
+      const yesPct = p.yes_pct || 50;
+      const noPct  = 100 - yesPct;
+
+      return `<div class="pred-card${voted?" is-voted":""}" id="card-${p.id}" style="animation-delay:${i*.05}s">
+        <div class="pred-inner">
+          <div class="pred-click-zone" data-pred-id="${p.id}" style="cursor:pointer">
+            <div class="pred-meta">
+              <span class="pred-cat ${CAT_CLASS[p.category]||"cat-dumb"}">${CAT_LABEL[p.category]||p.category}</span>
+              <span class="pred-odds">
+    YES ×<strong>${p.yes_multiplier ?? p.multiplier ?? 1}</strong>  
+    · NO ×<strong>${p.no_multiplier ?? 1.3}</strong>
+        </span>
+            </div>
+            <div class="pred-question">${p.question}</div>
+            <div class="pred-expand-hint">
+              <span style="font-size:9px">▲</span> Tap for details &amp; chart
+            </div>
+            <div class="pred-desc">${p.desc}</div>
+          </div>
+          <div class="yn-bar">
+            <div class="yn-yes" style="width:${yesPct}%"></div>
+            <div class="yn-no"  style="width:${noPct}%"></div>
+          </div>
+          <div class="pred-stats">
+            <span class="pred-stat"><img src="/assets/icons/user.svg" class="stat-icon"> <strong>${Number(p.total_bets).toLocaleString()}</strong> bets</span>
+            <span class="pred-stat"><img src="/assets/icons/hourglass.svg" class="stat-icon"> <strong>${
+ p.closes_at
+    ? (() => {
+        const diff = new Date(p.closes_at) - new Date();
+        if (diff <= 0) return "Closed";
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff / (1000 * 60)) % 60);
+        return `${h}h ${m}m`;
+      })()
+    : p.closes_in || "—"
+}</strong> left</span>
+            <span class="pred-stat"><img src="/assets/icons/circle-check.svg" class="stat-icon"><strong>${p.yes_pct}%</strong> YES</span>
+          </div>
+          ${!voted ? `
+          <div class="vote-row">
+            <button class="vote-btn yes${choice==="yes"?" selected-yes":""}" data-id="${p.id}" data-vote="yes"><img src="/assets/icons/circle-check.svg" class="vote-icon" width="14"> YES</button>
+            <button class="vote-btn no${choice==="no"?" selected-no":""}"   data-id="${p.id}" data-vote="no"><img src="/assets/icons/x.svg" class="vote-icon" width="14"> NO</button>
+          </div>
+          <div class="wager-section${choice?"":" hidden"}" id="wager-section-${p.id}">
+            <div class="wager-top">
+              <span class="wager-label">Wager:</span>
+              <input class="wager-input" id="wager-${p.id}" type="number" min="0" max="${bal}"
+  placeholder="Enter amount ($)" oninput="updatePayout('${p.id}')" />
+        <div class="wager-quick">
+                <button onclick="quickSet('${p.id}',50)">$50</button>
+                <button onclick="quickSet('${p.id}',100)">$100</button>
+                <button onclick="quickSet('${p.id}',${bal})">MAX</button>
+              </div>
+            </div>
+            <div class="payout-preview">
+              <span>Potential payout</span>
+              <span class="payout-val" id="payout-${p.id}">$—</span>
+            </div>
+          </div>
+          <button class="bet-btn${choice?"":" hidden"}" id="bet-btn-${p.id}" data-id="${p.id}">
+            <div class="btn-spinner"></div>
+            <span class="btn-text">Place Bet ${choice==="yes"?'<img src="/assets/icons/circle-check.svg" width="14" style="filter:brightness(0);vertical-align:middle"> YES':choice==="no"?'<img src="assets/icons/x.svg" width="14" style="filter:brightness(0);vertical-align:middle"> NO':""}</span>
+          </button>` : ""}
+        </div>
+        ${voted ? `
+        <div class="voted-banner">
+          <div>
+            <div class="voted-badge ${bet.choice}">
+              <img src="assets/icons/${bet.choice==="yes"?"circle-check":"x"}.svg" class="vb-icon">
+              <span class="vb-label">${bet.choice.toUpperCase()} locked in</span>
+            </div>
+            <div class="voted-status">${
+              bet.status==="won"  ? `<span class="status-won"><img src="/assets/icons/badge-dollar-sign.svg" class="status-icon"> Won · payout <b style="color:var(--green)">$${bet.payout}</b></span>` :
+              bet.status==="lost" ? `<span class="status-lost"><img src="/assets/icons/skull.svg" class="status-icon"> Lost · better luck next time</span>` : `<span class="status-pend"><img src="assets/icons/bolt.svg" class="status-icon"> Pending resolution</span>`
+            }</div>
+          </div>
+          ${bet.amount ? `<div class="voted-amount">$${Number(bet.amount).toLocaleString()}</div>` : ""}
+        </div>` : ""}
+      </div>`;
+    }).join("");
+
+    /* YES/NO choice listener */
+    list.querySelectorAll(".vote-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.id, v = btn.dataset.vote;
+        pendingChoice[id] = pendingChoice[id] === v ? null : v;
+        if (!pendingChoice[id]) delete pendingChoice[id];
+        renderPredictions();
+      });
+    });
+
+    /* BET button listener */
+    list.querySelectorAll(".bet-btn").forEach(btn => {
+      btn.addEventListener("click", () => placeBet(btn.dataset.id));
+    });
+
+    /* Card click-zone → open drawer */
+    list.querySelectorAll(".pred-click-zone").forEach(zone => {
+      zone.addEventListener("click", () => {
+        const id = zone.dataset.predId;
+        const pred = PREDICTIONS.find(p => p.id === id);
+        if (pred) openDrawer(pred);
+      });
+    });
+  }
+
+  window.quickSet = (id, amt) => {
+    const el = document.getElementById(`wager-${id}`); if (!el) return;
+    el.value = Math.min(amt, profile?.balance ?? 0);
+    const p = PREDICTIONS.find(x => x.id === id); if (p) updatePayout(id, p.multiplier);
+  };
+  window.updatePayout = (id) => {
+  const el = document.getElementById(`payout-${id}`);
+  const inp = document.getElementById(`wager-${id}`);
+  if (!el || !inp) return;
+
+  const amt = parseInt(inp.value) || 0;
+  const p = PREDICTIONS.find(x => x.id === id);
+  const choice = pendingChoice[id];
+
+  if (!choice || !p) {
+    el.textContent = "$—";
+    return;
+  }
+
+  const mult =
+    choice === "yes"
+      ? (p.yes_multiplier ?? p.multiplier)
+      : (p.no_multiplier ?? 1.3); // fallback
+
+  el.textContent = amt > 0
+    ? "$" + Math.floor(amt * mult).toLocaleString()
+    : "$—";
+};
+
+/* Place bet (secure) */
+async function placeBet(predId) {
+  const choice = pendingChoice[predId];
+  const amount = parseInt(document.getElementById(`wager-${predId}`)?.value) || 0;
+
+  if (!choice) {
+    showToast("Pick YES or NO first 💀", "loss");
+    return;
+  }
+
+  if (!amount || amount <= 0) {
+    showToast("Enter a valid amount", "loss");
+    return;
+  }
+
+  const btn = document.getElementById(`bet-btn-${predId}`);
+  const card = document.getElementById(`card-${predId}`);
+
+  btn?.classList.add("loading");
+  btn.disabled = true;
+  card?.classList.add("is-submitting");
+
+  const { error } = await supabase.rpc("place_bet_secure", {
+    p_prediction_id: predId,
+    p_choice: choice,
+    p_amount: amount
+  });
+
+  if (error) {
+    console.error("bet error:", error);
+
+    showToast(
+      error.message?.includes("balance")
+        ? "Not enough balance"
+        : "Bet failed",
+      "loss"
+    );
+
+    btn?.classList.remove("loading");
+    btn.disabled = false;
+    card?.classList.remove("is-submitting");
+    return;
+  }
+
+  // success
+  myBets[predId] = { choice, amount, status: "pending", payout: null };
+  delete pendingChoice[predId];
+
+  await loadProfile();
+  await loadPredictions();
+
+  showToast(
+    choice === "yes"
+      ? `✅ YES locked! $${amount}`
+      : `❌ NO locked! $${amount}`,
+    "win"
+  );
+
+  pushChatBetAnnounce(
+    profile?.username || user.email?.split("@")[0] || "anon",
+    choice,
+    PREDICTIONS.find(p => p.id === predId)?.question || "a prediction",
+    amount
+  );
+}
+
+  /* ══════════════════════════════════════
+     PREDICTION DETAIL DRAWER
+  ═══════════════════════════════════════ */
+  const drawerOverlay = document.getElementById("drawerOverlay");
+  const drawer        = document.getElementById("predDrawer");
+  const drawerInner   = document.getElementById("drawerInner");
+
+  drawerOverlay.addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+
+  function closeDrawer() {
+    drawer.classList.remove("open");
+    drawerOverlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  function openDrawer(pred) {
+    document.body.style.overflow = "hidden";
+    const bet     = myBets[pred.id];
+    const voted   = !!bet;
+    const yesPct  = pred.yes_pct || 50;
+    const noPct   = 100 - yesPct;
+    const bal     = profile?.balance ?? 1000;
+
+    // Generate fake time-series data for the chart (replace with real data when you store history)
+    const chartPoints = generateChartData(yesPct);
+
+    // Closes-in string
+    let closesStr = pred.closes_in || "—";
+    if (pred.closes_at) {
+      const diff = new Date(pred.closes_at) - new Date();
+      if (diff <= 0) { closesStr = "Closed"; }
+      else {
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        closesStr = `${h}h ${m}m`;
+      }
+    }
+
+    drawerInner.innerHTML = `
+      <div class="drawer-cat">
+        <span class="pred-cat ${CAT_CLASS[pred.category]||"cat-dumb"}">${CAT_LABEL[pred.category]||pred.category}</span>
+      </div>
+      <div class="drawer-question">${pred.question}</div>
+      <div class="drawer-desc">${pred.desc || "Make your prediction and wager on the outcome."}</div>
+
+      <!-- Key info tiles -->
+      <div class="drawer-info-row">
+        <div class="info-tile">
+          <div class="info-tile-lbl">YES Odds</div>
+          <div class="info-tile-val accent">×${pred.yes_multiplier ?? pred.multiplier ?? 1}</div>
+        </div>
+        <div class="info-tile">
+          <div class="info-tile-lbl">NO Odds</div>
+          <div class="info-tile-val blue">×${pred.no_multiplier ?? 1.3}</div>
+        </div>
+        <div class="info-tile">
+          <div class="info-tile-lbl">Total Bets</div>
+          <div class="info-tile-val">${Number(pred.total_bets || 0).toLocaleString()}</div>
+        </div>
+        <div class="info-tile">
+          <div class="info-tile-lbl">Closes In</div>
+          <div class="info-tile-val">${closesStr}</div>
+        </div>
+      </div>
+
+      <!-- YES vs NO distribution -->
+      <div class="chart-section">
+        <div class="chart-title">Current Distribution</div>
+        <div class="chart-wrap">
+          <div class="gauge-row gauge-yes">
+            <span class="gauge-label" style="color:var(--green);font-weight:700;font-size:11px">YES</span>
+            <div class="gauge-track" style="flex:1">
+              <div class="gauge-fill" style="width:${yesPct}%;background:linear-gradient(90deg,var(--green),rgba(87,255,168,.5))"></div>
+            </div>
+            <span class="gauge-pct green">${yesPct}%</span>
+          </div>
+          <div class="gauge-row gauge-no" style="margin-top:8px">
+            <span class="gauge-label" style="color:var(--red);font-weight:700;font-size:11px">NO</span>
+            <div class="gauge-track" style="flex:1">
+              <div class="gauge-fill" style="width:${noPct}%;background:linear-gradient(90deg,var(--red),rgba(255,107,107,.5))"></div>
+            </div>
+            <span class="gauge-pct red">${noPct}%</span>
+          </div>
+          <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px">
+            <div class="chart-title" style="margin-bottom:10px">Bet Volume Over Time</div>
+            <div class="chart-bars" id="drawerChartBars"></div>
+            <div class="chart-legend">
+              <div class="chart-legend-item"><div class="legend-swatch" style="background:var(--green);opacity:.75"></div>YES bets</div>
+              <div class="chart-legend-item"><div class="legend-swatch" style="background:var(--red);opacity:.6"></div>NO bets</div>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.7px">Odds movement (last 12h)</div>
+            <div class="odds-ticker" id="oddsTicker"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Betting UI inside drawer -->
+      <div class="drawer-bet-section">
+        <div class="drawer-bet-title">
+          ${voted ? "Your Bet" : "⚡ Place Your Bet"}
+        </div>
+        ${voted ? `
+          <div class="drawer-bet-voted">
+            <div>
+              <div class="drawer-voted-badge ${bet.choice}">
+                <span style="font-size:16px">${bet.choice==="yes"?"✅":"❌"}</span>
+                <span class="dvb-txt" style="font-size:14px;font-weight:700;${bet.choice==="yes"?"color:var(--green)":"color:var(--red)"}">${bet.choice.toUpperCase()} locked in</span>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">${
+                bet.status==="won"  ? `🏆 Won · payout <b style="color:var(--green)">$${bet.payout}</b>` :
+                bet.status==="lost" ? "💀 Lost · better luck next time" :
+                "⏳ Pending resolution"
+              }</div>
+            </div>
+            ${bet.amount ? `<div class="drawer-voted-amount">$${Number(bet.amount).toLocaleString()}</div>` : ""}
+          </div>
+        ` : `
+          <!-- YES / NO selector in drawer -->
+          <div class="vote-row" id="drawer-vote-row-${pred.id}">
+            <button class="vote-btn yes${(pendingChoice[pred.id]||"") === "yes" ? " selected-yes" : ""}"
+              data-id="${pred.id}" data-vote="yes" onclick="drawerPickChoice('${pred.id}','yes')">
+              <img src="/assets/icons/circle-check.svg" class="vote-icon" width="14"> YES
+            </button>
+            <button class="vote-btn no${(pendingChoice[pred.id]||"") === "no" ? " selected-no" : ""}"
+              data-id="${pred.id}" data-vote="no" onclick="drawerPickChoice('${pred.id}','no')">
+              <img src="/assets/icons/x.svg" class="vote-icon" width="14"> NO
+            </button>
+          </div>
+
+          <!-- Extended wager UI -->
+          <div class="wager-section${pendingChoice[pred.id] ? "" : " hidden"}" id="drawer-wager-${pred.id}" style="margin-top:12px;margin-bottom:12px">
+            <div class="wager-top">
+              <span class="wager-label">Wager:</span>
+              <input class="wager-input" id="drawer-wager-input-${pred.id}" type="number"
+                min="0" max="${bal}" placeholder="Enter amount ($)"
+                oninput="drawerUpdatePayout('${pred.id}')" />
+              <div class="wager-quick">
+                <button onclick="drawerQuickSet('${pred.id}',25)">$25</button>
+                <button onclick="drawerQuickSet('${pred.id}',50)">$50</button>
+                <button onclick="drawerQuickSet('${pred.id}',100)">$100</button>
+                <button onclick="drawerQuickSet('${pred.id}',${bal})">MAX</button>
+              </div>
+            </div>
+            <div class="payout-preview">
+              <div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:2px">Your balance after bet</div>
+                <div style="font-family:'Syne',sans-serif;font-size:12px;color:var(--sub)" id="drawer-bal-after-${pred.id}">$${Number(bal).toLocaleString()}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:11px;color:var(--muted);margin-bottom:2px">Potential payout</div>
+                <span class="payout-val" id="drawer-payout-${pred.id}" style="font-size:18px">$—</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="bet-btn${pendingChoice[pred.id] ? "" : " hidden"}" id="drawer-bet-btn-${pred.id}"
+            onclick="drawerPlaceBet('${pred.id}')">
+            <div class="btn-spinner"></div>
+            <span class="btn-text">Place Bet ${pendingChoice[pred.id]==="yes"?'✅ YES':pendingChoice[pred.id]==="no"?'❌ NO':""}</span>
+          </button>
+
+          <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center;line-height:1.5">
+            Balance: <strong style="color:var(--text)">$${Number(bal).toLocaleString()}</strong>
+            · Win rate: <strong style="color:var(--text)">${profile?.total_picks > 0 ? Math.round((profile.correct_picks||0)/profile.total_picks*100)+"%" : "—"}</strong>
+          </div>
+        `}
+      </div>
+    `;
+
+    // Render bar chart
+    const barsEl = document.getElementById("drawerChartBars");
+    if (barsEl) {
+      const maxV = Math.max(...chartPoints.map(d => Math.max(d.yes, d.no)), 1);
+      barsEl.innerHTML = chartPoints.map((d, i) => {
+        const yH = Math.round((d.yes / maxV) * 100);
+        const nH = Math.round((d.no  / maxV) * 100);
+        const lbl = d.label;
+        return `<div class="chart-bar-col" style="flex:1">
+          <div style="display:flex;align-items:flex-end;gap:2px;height:100px">
+            <div class="chart-bar yes-bar" style="height:${yH}px;flex:1"></div>
+            <div class="chart-bar no-bar"  style="height:${nH}px;flex:1"></div>
+          </div>
+          <div class="chart-bar-lbl">${lbl}</div>
+        </div>`;
+      }).join("");
+    }
+
+    // Render odds ticker
+    const tickerEl = document.getElementById("oddsTicker");
+    if (tickerEl) {
+      let base = yesPct;
+      tickerEl.innerHTML = Array.from({length:12}, (_, i) => {
+        const delta = (Math.random() - 0.5) * 4;
+        base = Math.max(10, Math.min(90, base + delta));
+        const dir = delta > 0 ? "up" : "dn";
+        const h = 12 - i;
+        return `<div class="odds-tick ${dir}">${h}h: ${Math.round(base)}%</div>`;
+      }).reverse().join("");
+    }
+
+    drawer.classList.add("open");
+    drawerOverlay.classList.add("open");
+    drawer.scrollTop = 0;
+  }
+
+  function generateChartData(yesPct) {
+    const pts = [];
+    const hours = ["12a","2a","4a","6a","8a","10a","12p","2p","4p","6p","8p","Now"];
+    let yBase = yesPct * 0.5, nBase = (100-yesPct) * 0.5;
+    hours.forEach((lbl, i) => {
+      yBase += Math.random() * 12 + 2;
+      nBase += Math.random() * 10 + 1;
+      pts.push({ label: lbl, yes: Math.round(yBase), no: Math.round(nBase) });
+    });
+    return pts;
+  }
+
+  /* Drawer choice pick — updates both drawer and card */
+  window.drawerPickChoice = (predId, vote) => {
+    pendingChoice[predId] = pendingChoice[predId] === vote ? null : vote;
+    if (!pendingChoice[predId]) delete pendingChoice[predId];
+    const choice = pendingChoice[predId] || null;
+
+    // Update drawer vote buttons
+    const yBtn = document.querySelector(`#drawer-vote-row-${predId} .vote-btn.yes`);
+    const nBtn = document.querySelector(`#drawer-vote-row-${predId} .vote-btn.no`);
+    if (yBtn) yBtn.className = `vote-btn yes${choice==="yes"?" selected-yes":""}`;
+    if (nBtn) nBtn.className = `vote-btn no${choice==="no"?" selected-no":""}`;
+
+    // Show/hide wager section and bet button
+    const wagerSec = document.getElementById(`drawer-wager-${predId}`);
+    const betBtn   = document.getElementById(`drawer-bet-btn-${predId}`);
+    if (wagerSec) wagerSec.classList.toggle("hidden", !choice);
+    if (betBtn) {
+      betBtn.classList.toggle("hidden", !choice);
+      if (choice) {
+        betBtn.querySelector(".btn-text").innerHTML =
+          `Place Bet ${choice==="yes"?"✅ YES":"❌ NO"}`;
+      }
+    }
+
+    // Also sync the card on main page
+    renderPredictions();
+  };
+
+  window.drawerQuickSet = (predId, amt) => {
+    const inp = document.getElementById(`drawer-wager-input-${predId}`); if (!inp) return;
+    inp.value = Math.min(amt, profile?.balance ?? 0);
+    drawerUpdatePayout(predId);
+  };
+
+  window.drawerUpdatePayout = (predId) => {
+    const inp   = document.getElementById(`drawer-wager-input-${predId}`);
+    const payEl = document.getElementById(`drawer-payout-${predId}`);
+    const balEl = document.getElementById(`drawer-bal-after-${predId}`);
+    if (!inp || !payEl) return;
+    const amt    = parseInt(inp.value) || 0;
+    const pred   = PREDICTIONS.find(x => x.id === predId);
+    const choice = pendingChoice[predId];
+    const mult   = choice === "yes" ? (pred?.yes_multiplier ?? pred?.multiplier ?? 1) : (pred?.no_multiplier ?? 1.3);
+    const bal    = profile?.balance ?? 0;
+    payEl.textContent = amt > 0 ? "$" + Math.floor(amt * mult).toLocaleString() : "$—";
+    if (balEl) balEl.textContent = "$" + Math.max(0, bal - amt).toLocaleString();
+    // Also sync card payout preview if open
+    const cardPay = document.getElementById(`payout-${predId}`);
+    if (cardPay) cardPay.textContent = amt > 0 ? "$" + Math.floor(amt * mult).toLocaleString() : "$—";
+  };
+
+  /* Drawer place bet — calls same placeBet function then closes drawer on success */
+  window.drawerPlaceBet = async (predId) => {
+    const wagerInp = document.getElementById(`drawer-wager-input-${predId}`);
+    // Sync the amount into the card's wager input so placeBet() can read it
+    const cardInp = document.getElementById(`wager-${predId}`);
+    if (wagerInp && cardInp) cardInp.value = wagerInp.value;
+
+    const btn = document.getElementById(`drawer-bet-btn-${predId}`);
+    if (btn) { btn.classList.add("loading"); btn.disabled = true; }
+
+    await placeBet(predId);
+
+    if (btn) { btn.classList.remove("loading"); btn.disabled = false; }
+
+    // If bet succeeded (myBets now has it), refresh drawer
+    if (myBets[predId]) {
+      const pred = PREDICTIONS.find(p => p.id === predId);
+      if (pred) openDrawer(pred);
+    }
+  };
+
+  /* THE LEADERBOARD */
+  async function loadLeaderboard() {
+    const { data } = await supabase.from("profiles")
+      .select("id,email,username,avatar_url,balance,total_picks,correct_picks")
+      .order("balance",{ascending:false}).limit(10);
+    const DUMMY = [
+      {id:"d1",email:"shadow@prophetly.io", balance:14200,total_picks:88,correct_picks:62},
+      {id:"d2",email:"oracle_x@email.com",  balance:11800,total_picks:74,correct_picks:51},
+      {id:"d3",email:"vibe_check@mail.com", balance:9400, total_picks:60,correct_picks:39},
+      {id:"d4",email:"guesswho@email.com",  balance:7700, total_picks:55,correct_picks:33},
+      {id:"d5",email:"luck99@web.io",        balance:5100, total_picks:40,correct_picks:22},
+    ];
+    const real = data || [];
+    const rIds = new Set(real.map(u=>u.id));
+    const all  = [...real,...DUMMY.filter(d=>!rIds.has(d.id))].sort((a,b)=>b.balance-a.balance).slice(0,8);
+    const colors=["#e8ff57","#57ffa8","#57a8ff","#ff6b6b","#c57fff","#ffb857","#57e8ff","#ff57b8"];
+    const icon=i=>i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;
+    const rc=i=>i===0?"gold":i===1?"silver":i===2?"bronze":"";
+    document.getElementById("lbList").innerHTML = all.map((u,i)=>{
+      const me=u.id===user.id, name=u.username||(u.email||"anon").split("@")[0];
+      const wr=u.total_picks?Math.round(u.correct_picks/u.total_picks*100)+"%":"—";
+      return `<div class="lb-row${me?" me":""}">
+        <div class="lb-rank ${rc(i)}">${icon(i)}</div>
+        <div class="lb-avatar" style="background:${colors[i%colors.length]};overflow:hidden;padding:0">${
+          u.avatar_url
+            ? `<img src="${u.avatar_url}" style="width:32px;height:32px;object-fit:cover;border-radius:50%">`
+            : `<span style="line-height:32px">${name[0].toUpperCase()}</span>`
+        }</div>
+        <div class="lb-name">${name}${me?'<span class="you">YOU</span>':""}</div>
+        <div class="lb-stats"><div class="lb-bal">$${Number(u.balance).toLocaleString()}</div><div class="lb-wr">${wr} win rate</div></div>
+      </div>`;
+    }).join("");
+  }
+
+  /* ══════ GLOBAL CHAT ═════*\
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  type TEXT DEFAULT 'message' CHECK (type IN ('message', 'bet_announce', 'announcement', 'system'))
+);
+*/
+
+const chatPanel = document.getElementById("chatPanel");
+const chatMsgs  = document.getElementById("chatMessages");
+const chatInput = document.getElementById("chatInput");
+
+document.getElementById("chatOnline").textContent = 
+  (Math.floor(Math.random()*35) + 12) + " online";
+
+document.getElementById("chatToggleBtn").addEventListener("click", () => {
+  chatPanel.classList.toggle("open");
+  if (chatPanel.classList.contains("open")) {
+    scrollBottom();
+    chatInput.focus();
+  }
+});
+
+document.getElementById("chatCloseBtn").addEventListener("click", () => 
+  chatPanel.classList.remove("open")
+);
+
+// ====================== REAL CHAT LOGIC ======================
+
+let chatLog = [];
+let msgId = 200; // fallback only
+
+function minsAgo(m) { return new Date(Date.now() - m * 60000); }
+function fmtTime(d) { 
+  return new Date(d).toLocaleTimeString("en-US", { 
+    hour: "numeric", 
+    minute: "2-digit", 
+    hour12: true 
+  }); 
+}
+function esc(s) { 
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
+}
+
+function buildMsgEl(msg) {
+  const mine = msg.mine || (msg.user_id === user?.id);
+  const colors = ["#e8ff57","#57ffa8","#57a8ff","#ff6b6b","#c57fff","#ffb857"];
+  const ci = (msg.username || "?").charCodeAt(0) % colors.length;
+
+  const d = document.createElement("div");
+d.className = `chat-msg${mine ? " mine" : ""}${msg.type === "bet_announce" ? " bet-announce" : ""}`;
+  d.id = `msg-${msg.id}`;
+  d.innerHTML = `
+    <div class="chat-avatar" style="background:${colors[ci]};overflow:hidden;padding:0">
+      ${msg.avatar_url
+        ? `<img src="${msg.avatar_url}" style="width:28px;height:28px;object-fit:cover;border-radius:50%">`
+        : `${(msg.username || "?")[0].toUpperCase()}`}
+    </div>
+    <div class="chat-bubble-wrap">
+      <span class="chat-username">${esc(msg.username || "System")}</span>
+      <div class="chat-bubble">${esc(msg.text)}</div>
+      <span class="chat-ts">${fmtTime(msg.created_at)}</span>
+    </div>`;
+
+  return d;
+}
+
+function renderChat() {
+  chatMsgs.innerHTML = "";
+  const chip = document.createElement("div");
+  chip.className = "chat-date-chip";
+  chip.innerHTML = "<span>Today</span>";
+  chatMsgs.appendChild(chip);
+
+  chatLog.forEach(m => chatMsgs.appendChild(buildMsgEl(m)));
+  scrollBottom();
+}
+
+function appendMsg(msg) {
+  chatMsgs.appendChild(buildMsgEl(msg));
+  scrollBottom();
+}
+
+function scrollBottom() {
+  setTimeout(() => {
+    chatMsgs.scrollTop = chatMsgs.scrollHeight;
+  }, 30);
+}
+
+// ====================== SEND MESSAGE ======================
+
+async function sendMsg() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+
+  const myName = profile?.username || user?.email?.split("@")[0] || "anon";
+
+  // Check for chat commands
+  if (text.startsWith('/')) {
+    handleChatCommand(text);
+    chatInput.value = "";
+    return;
+  }
+
+  const newMsg = {
+    id: Date.now(), // temporary ID, Supabase will override
+    user_id: user?.id || "local",
+    username: myName,
+    avatar_url: profile?.avatar_url || null,
+    text: text,
+    created_at: new Date(),
+    type: "message",
+    mine: true
+  };
+
+  // Optimistic UI update
+  chatLog.push(newMsg);
+  appendMsg(newMsg);
+  chatInput.value = "";
+
+  // Real Supabase insert
+  try {
+    await supabase
+      .from('chat_messages')
+      .insert({
+        user_id: user?.id || "local",
+        username: myName,
+        text: text,
+        type: 'message'
+      });
+  } catch (err) {
+    console.error("Failed to send message:", err);
+    // Optional: show error toast
+  }
+}
+
+// ====================== CHAT COMMANDS ======================
+
+function handleChatCommand(cmd) {
+  const [command, ...args] = cmd.slice(1).trim().split(/\s+/);
+  const argStr = args.join(" ");
+
+  switch (command.toLowerCase()) {
+    case "help":
+      addSystemMessage("Available commands: /help, /clear, /me <action>");
+      break;
+
+    case "clear":
+      chatMsgs.innerHTML = "";
+      const chip = document.createElement("div");
+      chip.className = "chat-date-chip";
+      chip.innerHTML = "<span>Today</span>";
+      chatMsgs.appendChild(chip);
+      addSystemMessage("Chat cleared locally.");
+      break;
+
+    case "me":
+      if (!argStr) {
+        addSystemMessage("Usage: /me <action>");
+        return;
+      }
+      addAnnouncement(`${profile?.username || user?.email?.split("@")[0] || "anon"} ${argStr}`);
+      break;
+
+    default:
+      addSystemMessage(`Unknown command: /${command}. Type /help for available commands.`);
+  }
+}
+
+// ====================== SYSTEM & ANNOUNCEMENT HELPERS ======================
+
+  function addSystemMessage(text) {
+  const msg = {
+    id: Date.now(),
+    username: "System",
+    text: text,
+    created_at: new Date(),
+    type: "system",
+    mine: false
+  };
+
+  chatLog.push(msg);
+
+  if (chatPanel.classList.contains("open")) {
+    appendMsg(msg);
+  }
+  }
+
+
+// ====================== BET ANNOUNCEMENT (unchanged logic) ======================
+
+function pushChatBetAnnounce(username, choice, question, amount) {
+  const q = question.length > 42 ? question.slice(0, 42) + "…" : question;
+  const msg = {
+    id: Date.now(),
+    user_id: user?.id || "system",
+    username: username,
+    text: `${choice === "yes" ? "YES" : "NO"} ${username} bet ${choice.toUpperCase()} on "${q}"${amount ? ` · $${amount}` : ""}`,
+    created_at: new Date(),
+    type: "bet_announce",
+    mine: false
+  };
+  chatLog.push(msg);
+  if (chatPanel.classList.contains("open")) appendMsg(msg);
+}
+
+// ====================== REAL-TIME SUBSCRIPTION ======================
+
+function initRealtimeChat() {
+  // Load last 50 messages
+  supabase
+    .from('chat_messages')
+    .select('*')
+    .order('created_at', { ascending: true })
+    .limit(50)
+    .then(({ data, error }) => {
+      if (error) {
+        console.error("Error loading chat history:", error);
+        return;
+      }
+      chatLog = data || [];
+      renderChat();
+    });
+
+  // Subscribe to new messages
+  supabase
+  .channel('chat')
+  .on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'chat_messages'
+    },
+    (payload) => {
+      const newMsg = payload.new;
+
+      if (!chatLog.some(m => m.id === newMsg.id)) {
+        chatLog.push(newMsg);
+
+        if (chatPanel.classList.contains("open")) {
+          appendMsg(newMsg);
+        }
+      }
+    }
+  )
+  .subscribe((status) => {
+  console.log('Chat subscription status:', status);
+});
+}
+
+// ====================== INITIALIZE ======================
+
+document.getElementById("chatSend").addEventListener("click", sendMsg);
+chatInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
+});
+
+// Auto-init when script runs
+initRealtimeChat();
+
+  await loadProfile();
+  await loadMyBets();
+  await loadPredictions();
+  await loadLeaderboard();
+</script>
+</body>
+</html>
