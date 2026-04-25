@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prophetly — Wallet Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080b12;
+      --surface: #0e1420;
+      --raised:  #131a28;
+      --border:  rgba(255,255,255,0.06);
+      --accent:  #e8ff57;
+      --green:   #57ffa8;
+      --red:     #ff6b6b;
+      --blue:    #57a8ff;
+      --text:    #f0f2f8;
+      --muted:   #4a5568;
+      --sub:     #8892a4;
+      --chip:    rgba(255,255,255,0.04);
+      --shadow:  0 18px 48px rgba(0,0,0,0.42);
+    }
+
+    html { height: 100%; }
+    body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      padding-bottom: 48px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8,11,18,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .back-btn {
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 7px 13px;
+      color: var(--sub);
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .back-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+    .nav-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+    .nav-spacer { flex: 1; }
+
+    .wallet-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 13px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sub);
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+    .wallet-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+    .wallet-btn.connected { border-color: rgba(87,255,168,0.25); color: var(--green); }
+    .wallet-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .wallet-btn.connected .wallet-dot {
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(87,255,168,0.5);
+    }
+
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 28px 18px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .profile-hero {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 28px;
+      animation: fadeUp 0.4s ease both;
+    }
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), #57ffa8);
+      display: grid;
+      place-items: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: #080b12;
+      box-shadow: 0 0 30px rgba(232,255,87,0.2);
+    }
+    .profile-info .name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+    .profile-info .email { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .profile-info .joined { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.4s 0.06s ease both;
+    }
+    @media(min-width: 700px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .stat-tile,
+    .panel,
+    .history-row,
+    .transaction-row,
+    .reward-card,
+    .wallet-card,
+    .settings-card,
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .stat-tile {
+      border-radius: 14px;
+      padding: 18px 16px;
+    }
+    .stat-tile .label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+    .stat-tile .value { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; }
+    .stat-tile .value.accent { color: var(--accent); }
+    .stat-tile .value.green  { color: var(--green); }
+    .stat-tile .value.blue   { color: var(--blue); }
+    .stat-tile .sub { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+    .section { margin-bottom: 28px; animation: fadeUp 0.4s 0.12s ease both; }
+    .section-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 12px;
+    }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+    .section-count, .section-note { font-size: 12px; color: var(--muted); }
+
+    .reward-grid,
+    .wallet-action-grid,
+    .ledger-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .reward-grid { grid-template-columns: repeat(2, 1fr); }
+    .wallet-action-grid { grid-template-columns: 1.25fr 1fr; }
+    .ledger-grid { grid-template-columns: 1.25fr 1fr; }
+
+    @media(max-width: 860px) {
+      .wallet-action-grid,
+      .ledger-grid,
+      .reward-grid { grid-template-columns: 1fr; }
+    }
+
+    .reward-card {
+      border-radius: 14px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .reward-card.rakeback { border-color: rgba(87,168,255,0.2); }
+    .reward-card.bonus { border-color: rgba(232,255,87,0.18); }
+    .reward-top { display: flex; align-items: center; justify-content: space-between; }
+    .reward-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 5px;
+    }
+    .reward-badge.rb { background: rgba(87,168,255,0.12); color: var(--blue); }
+    .reward-badge.bo { background: rgba(232,255,87,0.1); color: var(--accent); }
+    .reward-amount { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; }
+    .reward-amount.rb { color: var(--blue); }
+    .reward-amount.bo { color: var(--accent); }
+    .reward-sub { font-size: 11px; color: var(--muted); }
+
+    .reward-claim-btn,
+    .action-btn,
+    .inline-btn,
+    .modal-btn {
+      border-radius: 10px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .reward-claim-btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 8px 0;
+      width: 100%;
+    }
+    .reward-claim-btn.rb { color: var(--blue); border-color: rgba(87,168,255,0.25); }
+    .reward-claim-btn.rb:hover { background: rgba(87,168,255,0.08); border-color: var(--blue); }
+    .reward-claim-btn.bo { color: var(--accent); border-color: rgba(232,255,87,0.25); }
+    .reward-claim-btn.bo:hover { background: rgba(232,255,87,0.07); border-color: var(--accent); }
+    .reward-claim-btn:disabled,
+    .action-btn:disabled,
+    .modal-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .history-list,
+    .transaction-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .history-row,
+    .transaction-row {
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .history-outcome,
+    .tx-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+    .history-outcome.win  { background: rgba(87,255,168,0.1); }
+    .history-outcome.loss { background: rgba(255,107,107,0.08); }
+    .history-outcome.open { background: rgba(232,255,87,0.08); }
+    .tx-icon.deposit  { background: rgba(87,255,168,0.12); color: var(--green); }
+    .tx-icon.withdraw { background: rgba(87,168,255,0.12); color: var(--blue); }
+    .tx-icon.pending  { background: rgba(232,255,87,0.1); color: var(--accent); }
+
+    .history-q, .tx-main { flex: 1; min-width: 0; }
+    .history-sub, .tx-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .history-amt, .tx-amt { text-align: right; flex-shrink: 0; }
+    .amt-val, .tx-value { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+    .pos { color: var(--green); }
+    .neg { color: var(--red); }
+    .neu { color: var(--muted); }
+    .tx-value.deposit { color: var(--green); }
+    .tx-value.withdraw { color: var(--blue); }
+    .tx-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--sub);
+      margin-top: 6px;
+    }
+
+    .settings-card { border-radius: 14px; overflow: hidden; }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 14px;
+      gap: 16px;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .row-label { color: var(--sub); }
+    .row-val { color: var(--text); font-weight: 500; word-break: break-word; text-align: right; }
+    .btn-danger {
+      background: none;
+      border: none;
+      color: var(--red);
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 7px;
+    }
+    .btn-danger:hover { background: rgba(255,107,107,0.08); }
+
+    .wallet-card {
+      border-radius: 18px;
+      overflow: hidden;
+      border-color: rgba(232,255,87,0.12);
+    }
+    .wallet-card-head {
+      padding: 22px 20px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .wallet-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(232,255,87,0.08);
+      color: rgba(232,255,87,0.88);
+      border: 1px solid rgba(232,255,87,0.18);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+    .wallet-card-body { padding: 18px 20px 14px; display: flex; align-items: center; gap: 16px; }
+    .wallet-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, rgba(232,255,87,0.12), rgba(87,255,168,0.06));
+      border: 1px solid rgba(232,255,87,0.12);
+      display: grid;
+      place-items: center;
+    }
+    .wallet-card-icon svg { width: 22px; height: 22px; }
+    .wallet-card-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .wallet-card-sub { font-size: 12px; color: var(--sub); line-height: 1.5; margin-top: 4px; }
+    .wallet-card-addr {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+    }
+    .addr-code {
+      flex: 1;
+      min-width: 0;
+      word-break: break-all;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: var(--green);
+    }
+    .inline-btn {
+      border: 1px solid var(--border);
+      background: var(--raised);
+      color: var(--text);
+      padding: 8px 10px;
+    }
+    .inline-btn:hover { border-color: rgba(255,255,255,0.18); }
+    .wallet-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 0 20px 16px;
+    }
+    @media(max-width: 620px) { .wallet-meta-grid { grid-template-columns: 1fr; } }
+    .meta-card {
+      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .meta-label { font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .meta-value { font-size: 13px; color: var(--text); font-weight: 600; line-height: 1.45; }
+    .meta-value.subtle { color: var(--sub); font-weight: 500; }
+    .wallet-callout {
+      margin: 0 20px 18px;
+      background: rgba(87,168,255,0.08);
+      border: 1px solid rgba(87,168,255,0.16);
+      color: #cfe1ff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .wallet-callout strong { color: white; }
+
+    .panel { border-radius: 16px; padding: 18px; }
+    .panel-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .panel-sub { color: var(--sub); font-size: 12px; line-height: 1.55; }
+    .panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+
+    .action-stack { display: flex; flex-direction: column; gap: 12px; }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      padding: 12px 14px;
+      min-height: 44px;
+    }
+    .action-btn.primary { background: var(--accent); color: #080b12; }
+    .action-btn.primary:hover { opacity: 0.9; }
+    .action-btn.secondary { background: var(--raised); color: var(--text); border-color: var(--border); }
+    .action-btn.secondary:hover { border-color: rgba(255,255,255,0.18); }
+    .action-btn.ghost { background: transparent; color: var(--sub); border-color: var(--border); }
+    .action-btn.ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .status-box {
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 12px;
+    }
+    .status-box .label { font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .status-box .value { font-size: 13px; color: var(--text); font-weight: 600; line-height: 1.5; }
+
+    .security-list {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .security-item {
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: var(--sub);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .security-item strong { color: var(--text); }
+
+    .empty {
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+      font-size: 14px;
+      border: 1px dashed rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.015);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(2,4,8,0.7);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal.open { display: flex; }
+    .modal-card {
+      width: min(560px, 100%);
+      border-radius: 18px;
+      padding: 20px;
+      position: relative;
+    }
+    .modal-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+    .modal-sub { font-size: 12px; color: var(--sub); line-height: 1.55; margin-top: 4px; }
+    .close-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--raised);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .form-grid { display: grid; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      background: #0b111b;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 12px 13px;
+      outline: none;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+    }
+    .field textarea { min-height: 108px; resize: vertical; }
+    .field small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .field-inline {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    @media(max-width: 560px) { .field-inline { grid-template-columns: 1fr; } }
+
+    .modal-box {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 14px;
+      margin: 14px 0;
+    }
+    .modal-box-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; }
+    .modal-box p, .modal-box li {
+      font-size: 12px;
+      color: var(--sub);
+      line-height: 1.6;
+    }
+    .modal-box ul { padding-left: 18px; display: grid; gap: 6px; }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .modal-btn {
+      border: 1px solid transparent;
+      min-height: 42px;
+      padding: 0 16px;
+    }
+    .modal-btn.primary { background: var(--accent); color: #080b12; }
+    .modal-btn.primary:hover { opacity: 0.92; }
+    .modal-btn.secondary { background: var(--raised); color: var(--text); border-color: var(--border); }
+    .modal-btn.secondary:hover { border-color: rgba(255,255,255,0.18); }
+    .modal-btn.warn { background: rgba(255,107,107,0.12); color: #ffd7d7; border-color: rgba(255,107,107,0.2); }
+
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 1000;
+      white-space: nowrap;
+      max-width: calc(100vw - 32px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="back-btn" href="index.html">← Back to Game</a>
+    <div class="nav-title">My Stats</div>
+    <div class="nav-spacer"></div>
+    <button class="wallet-btn" id="walletNavBtn" aria-label="Wallet status">
+      <span class="wallet-dot" id="walletDot"></span>
+      <span id="walletNavLabel">Wallet Setup</span>
+    </button>
+  </nav>
+
+  <main>
+    <div class="profile-hero">
+      <div class="profile-avatar" id="dashAvatar">?</div>
+      <div class="profile-info">
+        <div class="name" id="dashName">Loading…</div>
+        <div class="email" id="dashEmail">—</div>
+        <div class="joined" id="dashJoined">—</div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-tile">
+        <div class="label">Balance</div>
+        <div class="value accent" id="dashBalance">—</div>
+        <div class="sub">available balance</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label">Deposit Wallet</div>
+        <div class="value green" id="walletReadyStat">Pending</div>
+        <div class="sub" id="walletStatusSub">secure custody setup</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label">Pending Credits</div>
+        <div class="value blue" id="pendingCredits">$0.00</div>
+        <div class="sub">awaiting confirmations</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label">Recent Transactions</div>
+        <div class="value" id="txStatCount">0</div>
+        <div class="sub">latest wallet movements</div>
+      </div>
+    </div>
+
+    <div class="section" style="animation-delay:0.1s">
+      <div class="section-hd">
+        <div class="section-title">Wallet Treasury</div>
+        <div class="section-note">Solana deposit and withdrawal workflow scaffold</div>
+      </div>
+
+      <div class="wallet-card" id="walletCard">
+        <div class="wallet-card-head">
+          <div class="wallet-pill">Secure Wallet Flow</div>
+          <button class="inline-btn" id="refreshWalletBtn" type="button">Refresh Wallet State</button>
+        </div>
+
+        <div class="wallet-card-body">
+          <div class="wallet-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="3"></rect>
+              <path d="M16 11a1 1 0 0 1 0 2"></path>
+              <path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div class="wallet-card-title" id="depositWalletTitle">Generate a Dedicated Deposit Wallet</div>
+            <div class="wallet-card-sub" id="depositWalletSubtitle">Each user should have a unique Solana deposit wallet. Generate it server-side, encrypt wallet material server-side, and only expose the public deposit address to this dashboard.</div>
+            <div class="wallet-card-addr" id="depositWalletBox">
+              <div class="addr-code" id="depositWalletAddress">No deposit wallet assigned yet.</div>
+              <button class="inline-btn" id="copyDepositWalletBtn" type="button">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="wallet-meta-grid">
+          <div class="meta-card">
+            <div class="meta-label">profiles.deposit_wallet</div>
+            <div class="meta-value" id="depositWalletMeta">Awaiting backend assignment</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">profiles.wallet_key</div>
+            <div class="meta-value subtle">Encrypted wallet material only. Never plaintext seed. Never client-generated for custody.</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Deposit Tracking</div>
+            <div class="meta-value" id="tatumStatusMeta">TATUM_API server integration placeholder</div>
+          </div>
+        </div>
+
+        <div class="wallet-callout">
+          <strong>Security boundary:</strong> Solana keypair generation, seed phrase handling, encryption, decryption, signing, webhook verification, and any use of <code>TATUM_API</code> must happen on trusted server infrastructure only. This HTML intentionally contains frontend hooks and placeholders, not secret-bearing logic.
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="animation-delay:0.14s">
+      <div class="section-hd">
+        <div class="section-title">Deposit & Withdraw</div>
+        <div class="section-note">End-to-end product flow with backend integration points</div>
+      </div>
+      <div class="wallet-action-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Deposit SOL / SPL Tokens</div>
+              <div class="panel-sub">Display the user deposit wallet, wait for on-chain confirmation, record a transaction row, then credit <code>profiles.balance</code>.</div>
+            </div>
+            <button class="action-btn primary" id="openDepositModalBtn" type="button">Open Deposit Flow</button>
+          </div>
+
+          <div class="status-grid">
+            <div class="status-box">
+              <div class="label">Current Deposit Address</div>
+              <div class="value" id="depositAddressPreview">Not generated</div>
+            </div>
+            <div class="status-box">
+              <div class="label">Tracking Mode</div>
+              <div class="value" id="trackingMode">Webhook / polling placeholder</div>
+            </div>
+          </div>
+
+          <div class="security-list">
+            <div class="security-item"><strong>Backend step 1:</strong> create or fetch a dedicated user deposit wallet using Solana web3 libraries on the server, encrypt the seed/private key, then save encrypted material to <code>profiles.wallet_key</code> and the public address to <code>profiles.deposit_wallet</code>.</div>
+            <div class="security-item"><strong>Backend step 2:</strong> subscribe to deposits using a server-only provider workflow such as Tatum. Suggested env placeholder: <code>TATUM_API</code>. Validate webhook signatures before updating balances.</div>
+            <div class="security-item"><strong>Backend step 3:</strong> once the deposit is confirmed, insert into <code>transactions(tx_signature, amount, created_at)</code> and atomically increment <code>profiles.balance</code>.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Withdraw Funds</div>
+              <div class="panel-sub">Collect amount and destination address, then route the request to a server endpoint that validates balance, decrypts wallet material safely, signs, broadcasts, and records the transaction.</div>
+            </div>
+            <button class="action-btn secondary" id="openWithdrawModalBtn" type="button">Open Withdraw Flow</button>
+          </div>
+
+          <div class="status-grid">
+            <div class="status-box">
+              <div class="label">Available to Withdraw</div>
+              <div class="value" id="withdrawableBalance">$0.00</div>
+            </div>
+            <div class="status-box">
+              <div class="label">Withdrawal Status</div>
+              <div class="value" id="withdrawStatus">Ready for request validation</div>
+            </div>
+          </div>
+
+          <div class="security-list">
+            <div class="security-item"><strong>Do not sign in browser:</strong> if Prophetly custodies deposit wallets, the private material must never be exposed to client JS or local storage.</div>
+            <div class="security-item"><strong>Use database transactions / RPCs:</strong> debit <code>profiles.balance</code> and insert the withdrawal row together to avoid double-spend race conditions.</div>
+            <div class="security-item"><strong>Recommended table usage:</strong> store the blockchain signature in <code>transactions.tx_signature</code>, amount in <code>transactions.amount</code>, and timestamp in <code>transactions.created_at</code>. Add server-side status/type columns as needed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="animation-delay:0.18s">
+      <div class="section-hd">
+        <div class="section-title">Rewards</div>
+      </div>
+      <div class="reward-grid">
+        <div class="reward-card rakeback">
+          <div class="reward-top"><span class="reward-badge rb">Rakeback</span></div>
+          <div class="reward-amount rb" id="rakebackAmount">—</div>
+          <div class="reward-sub">earned this week</div>
+          <button class="reward-claim-btn rb" id="claimRakebackBtn" disabled>Claim</button>
+        </div>
+        <div class="reward-card bonus">
+          <div class="reward-top"><span class="reward-badge bo">Bonus</span></div>
+          <div class="reward-amount bo" id="bonusAmount">—</div>
+          <div class="reward-sub">available promotional balance</div>
+          <button class="reward-claim-btn bo" id="claimBonusBtn" disabled>Claim</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="animation-delay:0.22s">
+      <div class="section-hd">
+        <div class="section-title">Recent Wallet Transactions</div>
+        <div class="section-count" id="txCountLabel">0 transactions</div>
+      </div>
+      <div class="ledger-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Activity Feed</div>
+              <div class="panel-sub">Recent credits and withdrawals from <code>transactions</code> table, showing amount, blockchain signature, and creation time.</div>
+            </div>
+            <button class="action-btn ghost" id="refreshTransactionsBtn" type="button">Refresh</button>
+          </div>
+          <div class="transaction-list" id="transactionList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Backend Notes</div>
+          <div class="panel-sub">Suggested operational flow for balance integrity and deposit tracking.</div>
+          <div class="security-list">
+            <div class="security-item"><strong>Deposit detection:</strong> backend receives provider webhook or polls blockchain API using <code>process.env.TATUM_API</code>, resolves the destination address to a user via <code>profiles.deposit_wallet</code>, then queues confirmation handling.</div>
+            <div class="security-item"><strong>Confirmation credit:</strong> once the transaction is finalized, server inserts a transaction row and increments <code>profiles.balance</code> in one protected operation.</div>
+            <div class="security-item"><strong>Withdrawal:</strong> server checks KYC/risk rules, validates amount against <code>profiles.balance</code>, decrypts the encrypted wallet material from <code>profiles.wallet_key</code> only in memory, signs via Solana web3, broadcasts, and stores the resulting signature.</div>
+            <div class="security-item"><strong>Frontend responsibility:</strong> render address, show status, submit requests, and reflect server-confirmed balances only. Never hold custody secrets.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="animation-delay:0.26s">
+      <div class="section-hd">
+        <div class="section-title">Recent Bets</div>
+        <div class="section-count" id="histCount">—</div>
+      </div>
+      <div class="history-list" id="histList"></div>
+    </div>
+
+    <div class="section" style="animation-delay:0.30s">
+      <div class="section-hd"><div class="section-title">Account</div></div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <span class="row-label">Email</span>
+          <span class="row-val" id="settingsEmail">—</span>
+        </div>
+        <div class="settings-row">
+          <span class="row-label">Member since</span>
+          <span class="row-val" id="settingsJoined">—</span>
+        </div>
+        <div class="settings-row">
+          <span class="row-label">Deposit wallet</span>
+          <span class="row-val" id="settingsDepositWallet">Not assigned</span>
+        </div>
+        <div class="settings-row">
+          <span class="row-label">Sign out</span>
+          <button class="btn-danger" id="logoutBtn">Sign Out →</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="depositModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-top">
+        <div>
+          <div class="modal-title">Deposit Funds</div>
+          <div class="modal-sub">Frontend scaffold for generating or fetching a dedicated Solana deposit wallet, displaying the public address, and reflecting confirmation state.</div>
+        </div>
+        <button class="close-btn" type="button" data-close-modal="depositModal">×</button>
+      </div>
+
+      <div class="modal-box">
+        <div class="modal-box-title">Deposit workflow</div>
+        <ul>
+          <li>Call a trusted backend endpoint to create or fetch the user deposit wallet.</li>
+          <li>Backend uses Solana web3 to generate the wallet, encrypts wallet material, stores encrypted content in <code>profiles.wallet_key</code>, and stores the public address in <code>profiles.deposit_wallet</code>.</li>
+          <li>Frontend only receives the public deposit address and status metadata.</li>
+          <li>Deposits are tracked server-side via webhook/polling using <code>TATUM_API</code> or an equivalent provider secret.</li>
+        </ul>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Deposit Address</label>
+          <div class="field-inline">
+            <input type="text" id="depositAddressField" readonly value="No wallet assigned yet" />
+            <button class="modal-btn secondary" id="copyDepositModalBtn" type="button">Copy Address</button>
+          </div>
+          <small>Show this address to the user only after the backend has created or fetched it safely.</small>
+        </div>
+
+        <div class="field">
+          <label>Optional Expected Amount</label>
+          <input type="number" id="expectedDepositAmount" min="0" step="0.000001" placeholder="e.g. 1.25" />
+          <small>Pure UI placeholder. Final accounting must use confirmed on-chain amounts from backend verification, not client input.</small>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn secondary" type="button" data-close-modal="depositModal">Close</button>
+        <button class="modal-btn primary" id="generateDepositWalletBtn" type="button">Generate / Fetch Deposit Wallet</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="withdrawModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-top">
+        <div>
+          <div class="modal-title">Withdraw Funds</div>
+          <div class="modal-sub">Submit withdrawal requests to the backend. Signing and private key usage stay server-side only.</div>
+        </div>
+        <button class="close-btn" type="button" data-close-modal="withdrawModal">×</button>
+      </div>
+
+      <div class="modal-box">
+        <div class="modal-box-title">Security-sensitive withdrawal boundary</div>
+        <p>
+          This UI must send amount and destination address to a secure backend route. The backend should validate the authenticated user,
+          enforce limits, confirm <code>profiles.balance</code>, decrypt encrypted wallet material from <code>profiles.wallet_key</code> only in memory,
+          sign with Solana web3 libraries, broadcast, and write the resulting blockchain signature into <code>transactions.tx_signature</code>.
+        </p>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Destination Wallet</label>
+          <input type="text" id="withdrawAddress" placeholder="Enter recipient Solana address" />
+          <small>Validate address format server-side before signing. Client validation can help UX but is not sufficient.</small>
+        </div>
+        <div class="field">
+          <label>Amount</label>
+          <input type="number" id="withdrawAmount" min="0" step="0.000001" placeholder="0.00" />
+          <small>Server must re-check available balance and enforce minimums, fees, and business rules.</small>
+        </div>
+        <div class="field">
+          <label>Internal Memo / Audit Note</label>
+          <textarea id="withdrawMemo" placeholder="Optional non-secret metadata for support / audit trail"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn secondary" type="button" data-close-modal="withdrawModal">Cancel</button>
+        <button class="modal-btn warn" id="submitWithdrawBtn" type="button">Submit Withdrawal Request</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="icon-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 22h14"/>
+      <path d="M5 2h14"/>
+      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/>
+      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>
+    </symbol>
+    <symbol id="icon-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+    </symbol>
+  </svg>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+    import { Connection, Keypair, PublicKey, clusterApiUrl } from "https://esm.sh/@solana/web3.js@1.95.3";
+
+    // Frontend-only config scaffold.
+    // SECURITY: never place TATUM_API or any private encryption/signing secret in browser code.
+    const FRONTEND_CONFIG = {
+      network: "devnet",
+      backendBaseUrl: "YOUR_BACKEND_BASE_URL",
+      supabaseUrl: "https://yjeedgcveawterfpvnuc.supabase.co",
+      supabaseAnonKey: "YOUR_SUPABASE_ANON_KEY",
+      envPlaceholders: {
+        // SERVER-ONLY ENV PLACEHOLDER. Example usage on backend only:
+        // process.env.TATUM_API
+        TATUM_API: "SERVER_ONLY_DO_NOT_EXPOSE_IN_CLIENT"
+      }
+    };
+
+    // Solana library placeholder references.
+    // These imports intentionally demonstrate the expected library surface for backend/server parity.
+    // This frontend should not generate custody wallets for persistent storage; generation belongs server-side.
+    const solanaClientReference = {
+      Connection,
+      Keypair,
+      PublicKey,
+      endpoint: clusterApiUrl(FRONTEND_CONFIG.network)
+    };
+    console.debug("Solana web3 placeholder loaded", solanaClientReference.endpoint);
+
+    const supabase = createClient(
+      FRONTEND_CONFIG.supabaseUrl,
+      FRONTEND_CONFIG.supabaseAnonKey,
+      { auth: { persistSession: true, autoRefreshToken: true } }
+    );
+
+    function svgUse(id, cls = "") {
+      return `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2800);
+    }
+
+    function formatCurrency(value) {
+      const num = Number(value || 0);
+      return "$" + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function shortenAddr(addr) {
+      if (!addr) return "Not assigned";
+      return addr.length > 12 ? `${addr.slice(0, 6)}…${addr.slice(-6)}` : addr;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return "Unknown time";
+      return new Date(ts).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    const state = {
+      profile: null,
+      user: null,
+      transactions: [],
+      pendingCredits: 0
+    };
+
+    const el = {
+      dashAvatar: document.getElementById("dashAvatar"),
+      dashName: document.getElementById("dashName"),
+      dashEmail: document.getElementById("dashEmail"),
+      dashJoined: document.getElementById("dashJoined"),
+      dashBalance: document.getElementById("dashBalance"),
+      walletReadyStat: document.getElementById("walletReadyStat"),
+      walletStatusSub: document.getElementById("walletStatusSub"),
+      pendingCredits: document.getElementById("pendingCredits"),
+      txStatCount: document.getElementById("txStatCount"),
+      txCountLabel: document.getElementById("txCountLabel"),
+      transactionList: document.getElementById("transactionList"),
+      walletNavBtn: document.getElementById("walletNavBtn"),
+      walletNavLabel: document.getElementById("walletNavLabel"),
+      depositWalletAddress: document.getElementById("depositWalletAddress"),
+      depositWalletMeta: document.getElementById("depositWalletMeta"),
+      depositAddressPreview: document.getElementById("depositAddressPreview"),
+      depositAddressField: document.getElementById("depositAddressField"),
+      depositWalletTitle: document.getElementById("depositWalletTitle"),
+      depositWalletSubtitle: document.getElementById("depositWalletSubtitle"),
+      tatumStatusMeta: document.getElementById("tatumStatusMeta"),
+      withdrawableBalance: document.getElementById("withdrawableBalance"),
+      withdrawStatus: document.getElementById("withdrawStatus"),
+      trackingMode: document.getElementById("trackingMode"),
+      settingsEmail: document.getElementById("settingsEmail"),
+      settingsJoined: document.getElementById("settingsJoined"),
+      settingsDepositWallet: document.getElementById("settingsDepositWallet"),
+      histList: document.getElementById("histList"),
+      histCount: document.getElementById("histCount"),
+      rakebackAmount: document.getElementById("rakebackAmount"),
+      bonusAmount: document.getElementById("bonusAmount"),
+      claimRakebackBtn: document.getElementById("claimRakebackBtn"),
+      claimBonusBtn: document.getElementById("claimBonusBtn")
+    };
+
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    function renderProfile() {
+      const p = state.profile || {};
+      const user = state.user || {};
+      const initial = (user.email || "?")[0].toUpperCase();
+      const name = user.email?.split("@")[0] || "Prophet";
+      const joined = user.created_at
+        ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+        : "—";
+
+      el.dashAvatar.textContent = initial;
+      el.dashName.textContent = name;
+      el.dashEmail.textContent = user.email || "—";
+      el.dashJoined.textContent = user.created_at ? `Joined ${joined}` : "—";
+      el.settingsEmail.textContent = user.email || "—";
+      el.settingsJoined.textContent = joined;
+      el.dashBalance.textContent = formatCurrency(p.balance);
+      el.withdrawableBalance.textContent = formatCurrency(p.balance);
+
+      const depositWallet = p.deposit_wallet || "";
+      const walletReady = !!depositWallet;
+      el.walletReadyStat.textContent = walletReady ? "Active" : "Pending";
+      el.walletStatusSub.textContent = walletReady ? "deposit wallet assigned" : "secure wallet not created yet";
+      el.walletNavBtn.classList.toggle("connected", walletReady);
+      el.walletNavLabel.textContent = walletReady ? shortenAddr(depositWallet) : "Wallet Setup";
+      el.depositWalletAddress.textContent = depositWallet || "No deposit wallet assigned yet.";
+      el.depositWalletMeta.textContent = depositWallet || "Awaiting backend assignment";
+      el.depositAddressPreview.textContent = depositWallet || "Not generated";
+      el.depositAddressField.value = depositWallet || "No wallet assigned yet";
+      el.settingsDepositWallet.textContent = depositWallet || "Not assigned";
+      el.depositWalletTitle.textContent = walletReady ? "Dedicated Deposit Wallet Ready" : "Generate a Dedicated Deposit Wallet";
+      el.depositWalletSubtitle.textContent = walletReady
+        ? "Share this public address with the user for incoming deposits. Credit balance only after server-confirmed on-chain settlement."
+        : "Each user should have a unique Solana deposit wallet. Generate it server-side, encrypt wallet material server-side, and only expose the public deposit address to this dashboard.";
+      el.tatumStatusMeta.textContent = walletReady
+        ? "Ready for backend webhook / polling wiring via server-only TATUM_API"
+        : "TATUM_API server integration placeholder";
+      el.trackingMode.textContent = walletReady
+        ? "Address linked for webhook / polling lookup"
+        : "Webhook / polling placeholder";
+    }
+
+    function inferTxType(tx) {
+      if (tx.type) return tx.type;
+      return Number(tx.amount || 0) >= 0 ? "deposit" : "withdraw";
+    }
+
+    function inferTxStatus(tx) {
+      return tx.status || (Number(tx.amount || 0) > 0 ? "confirmed" : "submitted");
+    }
+
+    function renderTransactions() {
+      const txs = state.transactions || [];
+      el.txStatCount.textContent = String(txs.length);
+      el.txCountLabel.textContent = `${txs.length} transaction${txs.length === 1 ? "" : "s"}`;
+
+      if (!txs.length) {
+        el.transactionList.innerHTML = `<div class="empty">No wallet transactions yet — deposits and withdrawals will appear here once your backend starts writing to the transactions table.</div>`;
+        el.pendingCredits.textContent = "$0.00";
+        return;
+      }
+
+      const pendingCredits = txs
+        .filter(tx => inferTxType(tx) === "deposit" && ["pending", "processing"].includes(inferTxStatus(tx)))
+        .reduce((sum, tx) => sum + Math.abs(Number(tx.amount || 0)), 0);
+      state.pendingCredits = pendingCredits;
+      el.pendingCredits.textContent = formatCurrency(pendingCredits);
+
+      el.transactionList.innerHTML = txs.map(tx => {
+        const type = inferTxType(tx);
+        const status = inferTxStatus(tx);
+        const amount = Math.abs(Number(tx.amount || 0));
+        const signature = tx.tx_signature || tx.signature || "pending-signature";
+        const createdAt = tx.created_at || tx.inserted_at;
+        const amountClass = type === "withdraw" ? "withdraw" : "deposit";
+        const iconClass = status === "pending" ? "pending" : (type === "withdraw" ? "withdraw" : "deposit");
+        const title = type === "withdraw" ? "Withdrawal" : "Deposit";
+
+        return `
+          <div class="transaction-row">
+            <div class="tx-icon ${iconClass}">${type === "withdraw" ? '↗' : '↘'}</div>
+            <div class="tx-main">
+              <div>${title}</div>
+              <div class="tx-sub">${formatDate(createdAt)} · tx_signature: ${signature}</div>
+              <div class="tx-status">${status}</div>
+            </div>
+            <div class="tx-amt">
+              <div class="tx-value ${amountClass}">${type === "withdraw" ? '-' : '+'}${formatCurrency(amount)}</div>
+              <div class="tx-sub">${type}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function loadTransactions() {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("tx_signature, amount, created_at, type, status")
+        .eq("user_id", state.user.id)
+        .order("created_at", { ascending: false })
+        .limit(12);
+
+      if (error) {
+        console.warn("transactions load error", error);
+        el.transactionList.innerHTML = `<div class="empty">Unable to load transactions right now. Confirm the transactions table and fields are available.</div>`;
+        return;
+      }
+
+      state.transactions = data || [];
+      renderTransactions();
+    }
+
+    async function loadRewards() {
+      const { data: rakeRows } = await supabase
+        .from("rakeback")
+        .select("amount")
+        .eq("user_id", state.user.id)
+        .is("claimed_at", null);
+
+      const rakeTotal = (rakeRows || []).reduce((s, r) => s + (r.amount || 0), 0);
+      el.rakebackAmount.textContent = formatCurrency(rakeTotal);
+      el.claimRakebackBtn.disabled = !(rakeTotal > 0);
+      el.claimRakebackBtn.textContent = rakeTotal > 0 ? `Claim ${formatCurrency(rakeTotal)}` : "Nothing to claim";
+
+      const now = new Date().toISOString();
+      const { data: bonusRows } = await supabase
+        .from("bonuses")
+        .select("id, amount, expires_at")
+        .eq("user_id", state.user.id)
+        .is("claimed_at", null)
+        .or(`expires_at.is.null,expires_at.gt.${now}`);
+
+      const bonusTotal = (bonusRows || []).reduce((s, r) => s + (r.amount || 0), 0);
+      el.bonusAmount.textContent = formatCurrency(bonusTotal);
+      el.claimBonusBtn.disabled = !(bonusTotal > 0);
+      el.claimBonusBtn.textContent = bonusTotal > 0 ? `Claim ${formatCurrency(bonusTotal)}` : "No bonuses";
+    }
+
+    async function loadBets() {
+      const { data: bets, error } = await supabase
+        .from("bets")
+        .select("*")
+        .eq("user_id", state.user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) {
+        el.histList.innerHTML = `<div class="empty">Failed to load bets.</div>`;
+        return;
+      }
+
+      if (!bets || !bets.length) {
+        el.histList.innerHTML = `<div class="empty">No picks yet — go make some predictions.</div>`;
+        el.histCount.textContent = "0 picks";
+        return;
+      }
+
+      el.histCount.textContent = `${bets.length} picks`;
+      el.histList.innerHTML = bets.map((bet) => {
+        const vote = bet.choice || bet.vote || "—";
+        const wager = Number(bet.amount || bet.wager || 0);
+        const title = bet.prediction_title || bet.prediction_id || "Unknown prediction";
+        const ts = bet.created_at ? new Date(bet.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+
+        let outcomeCls, outcomeIcon, amtCls, amtVal, amtSub;
+        if (bet.outcome === "win" || bet.result === "win") {
+          outcomeCls = "win";
+          outcomeIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#57ffa8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+          const profit = bet.payout ? Number(bet.payout) - wager : wager;
+          amtCls = "pos";
+          amtVal = `+${formatCurrency(profit)}`;
+          amtSub = "profit";
+        } else if (bet.outcome === "loss" || bet.result === "loss") {
+          outcomeCls = "loss";
+          outcomeIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+          amtCls = "neg";
+          amtVal = `-${formatCurrency(wager)}`;
+          amtSub = "lost";
+        } else {
+          outcomeCls = "open";
+          outcomeIcon = svgUse("icon-hourglass", "");
+          amtCls = "neu";
+          amtVal = formatCurrency(wager);
+          amtSub = "wagered";
+        }
+
+        return `
+          <div class="history-row">
+            <div class="history-outcome ${outcomeCls}">${outcomeIcon}</div>
+            <div class="history-q">
+              ${title}
+              <div class="history-sub">Voted <strong>${String(vote).toUpperCase()}</strong>${ts ? ` · ${ts}` : ""}</div>
+            </div>
+            <div class="history-amt">
+              <div class="amt-val ${amtCls}">${amtVal}</div>
+              <div class="history-sub">${amtSub}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function loadProfile() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.replace("login.html");
+        return;
+      }
+
+      state.user = session.user;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, balance, deposit_wallet, wallet_key")
+        .eq("id", state.user.id)
+        .single();
+
+      state.profile = profile || { balance: 0, deposit_wallet: null, wallet_key: null };
+      renderProfile();
+    }
+
+    async function refreshAll() {
+      await loadProfile();
+      await Promise.allSettled([loadRewards(), loadTransactions(), loadBets()]);
+      renderTransactions();
+    }
+
+    // Placeholder server integrations.
+    async function requestServerDepositWallet() {
+      // SECURITY CRITICAL:
+      // This request should hit a trusted backend route such as POST /api/wallets/deposit.
+      // Backend responsibilities:
+      // 1) Authenticate user.
+      // 2) Use Solana web3 libraries to generate a Keypair.
+      // 3) Encrypt seed/private key with KMS/HSM or equivalent server-side secret management.
+      // 4) Store encrypted value in profiles.wallet_key.
+      // 5) Store public address in profiles.deposit_wallet.
+      // 6) Return ONLY the public address and safe metadata.
+      // Never return plaintext seed phrase to browser for a custodied wallet flow.
+
+      showToast("Deposit wallet generation is a backend integration point.");
+
+      // Example safe response shape expected from backend:
+      const mockResponse = {
+        deposit_wallet: state.profile?.deposit_wallet || "7xQn_placeholder_Deposit_Wallet_Addr_9fK2pV3Y",
+        status: "ready"
+      };
+
+      // In a real implementation, replace the mock with fetch(...).
+      // const resp = await fetch(`${FRONTEND_CONFIG.backendBaseUrl}/api/wallets/deposit`, { method: 'POST', credentials: 'include' });
+      // const mockResponse = await resp.json();
+
+      state.profile = {
+        ...state.profile,
+        deposit_wallet: mockResponse.deposit_wallet,
+        wallet_key: state.profile?.wallet_key || "encrypted_wallet_material_placeholder"
+      };
+      renderProfile();
+    }
+
+    async function requestWithdrawal({ amount, address, memo }) {
+      // SECURITY CRITICAL:
+      // This function should POST to a trusted server endpoint such as /api/wallets/withdraw.
+      // The server must:
+      // - verify user auth/session
+      // - validate destination address and amount
+      // - ensure sufficient profiles.balance
+      // - decrypt profiles.wallet_key ONLY on server, in memory
+      // - sign/broadcast via Solana web3
+      // - store transactions(tx_signature, amount, created_at)
+      // - atomically decrement profiles.balance
+      // - return non-sensitive status and tx signature
+
+      console.debug("withdraw request placeholder", { amount, address, memo });
+      showToast("Withdrawal submission is a backend integration point.");
+
+      // Mock optimistic UI scaffold only.
+      const mockTx = {
+        tx_signature: `pending_${Date.now()}`,
+        amount: -Math.abs(Number(amount || 0)),
+        created_at: new Date().toISOString(),
+        type: "withdraw",
+        status: "pending"
+      };
+      state.transactions = [mockTx, ...(state.transactions || [])].slice(0, 12);
+      renderTransactions();
+      el.withdrawStatus.textContent = "Withdrawal request submitted to backend";
+    }
+
+    async function requestDepositTrackingRefresh() {
+      // SERVER-ONLY NOTE:
+      // A real implementation would call a backend route that uses TATUM_API or another provider to:
+      // - poll recent deposits or process queued webhooks
+      // - map blockchain activity to profiles.deposit_wallet
+      // - confirm settlement depth / finality
+      // - insert transactions rows and update profiles.balance atomically
+      showToast("Deposit tracking refresh should call your backend.");
+    }
+
+    document.getElementById("openDepositModalBtn").addEventListener("click", () => openModal("depositModal"));
+    document.getElementById("openWithdrawModalBtn").addEventListener("click", () => openModal("withdrawModal"));
+    document.querySelectorAll("[data-close-modal]").forEach(btn => {
+      btn.addEventListener("click", () => closeModal(btn.getAttribute("data-close-modal")));
+    });
+    document.querySelectorAll(".modal").forEach(modal => {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal(modal.id);
+      });
+    });
+
+    document.getElementById("copyDepositWalletBtn").addEventListener("click", async () => {
+      const addr = state.profile?.deposit_wallet;
+      if (!addr) return showToast("No deposit wallet to copy yet.");
+      await navigator.clipboard.writeText(addr).catch(() => {});
+      showToast("Deposit wallet copied.");
+    });
+
+    document.getElementById("copyDepositModalBtn").addEventListener("click", async () => {
+      const addr = state.profile?.deposit_wallet;
+      if (!addr) return showToast("No deposit wallet available yet.");
+      await navigator.clipboard.writeText(addr).catch(() => {});
+      showToast("Deposit address copied.");
+    });
+
+    document.getElementById("generateDepositWalletBtn").addEventListener("click", async () => {
+      await requestServerDepositWallet();
+      closeModal("depositModal");
+    });
+
+    document.getElementById("submitWithdrawBtn").addEventListener("click", async () => {
+      const address = document.getElementById("withdrawAddress").value.trim();
+      const amount = document.getElementById("withdrawAmount").value;
+      const memo = document.getElementById("withdrawMemo").value.trim();
+
+      if (!address) return showToast("Enter a destination wallet.");
+      if (!amount || Number(amount) <= 0) return showToast("Enter a valid withdrawal amount.");
+
+      await requestWithdrawal({ amount, address, memo });
+      closeModal("withdrawModal");
+    });
+
+    document.getElementById("refreshWalletBtn").addEventListener("click", refreshAll);
+    document.getElementById("refreshTransactionsBtn").addEventListener("click", async () => {
+      await requestDepositTrackingRefresh();
+      await loadTransactions();
+    });
+
+    document.getElementById("walletNavBtn").addEventListener("click", () => {
+      if (state.profile?.deposit_wallet) {
+        openModal("depositModal");
+      } else {
+        openModal("depositModal");
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.replace("login.html");
+    });
+
+    // Optional realtime hook scaffold.
+    // In production, consider subscribing to changes on profiles and transactions for the authenticated user.
+    // Keep RLS strict. Never stream encrypted wallet material to unauthorized clients.
+
+    await refreshAll();
+  </script>
+</body>
+</html>
