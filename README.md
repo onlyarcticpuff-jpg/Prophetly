@@ -1,4 +1,2 @@
-# Prophetly
-
-vgghvjjnngggpphh
-...fix
+# Prophetly.xyz
+⚡
