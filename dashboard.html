@@ -807,7 +807,7 @@
   async function saveWalletToSupabase(addr) {
     const { error } = await supabase
       .from("profiles")
-      .update({ wallet_adresse: addr })
+      .update({ wallet_address: addr })
       .eq("id", user.id);
     if (error) console.error("Wallet save error:", error);
   }
@@ -815,7 +815,7 @@
   async function clearWalletInSupabase() {
     const { error } = await supabase
       .from("profiles")
-      .update({ wallet_adresse: null })
+      .update({ wallet_address: null })
       .eq("id", user.id);
     if (error) console.error("Wallet clear error:", error);
   }
@@ -961,8 +961,8 @@
   document.getElementById("walletConnectBtn")?.addEventListener("click", handleConnect);
 
   // ── Restore from Supabase ────────────────────────────────────────────────────
-  if (p.wallet_adresse) {
-    setWalletConnected(p.wallet_adresse);
+  if (p.wallet_address) {
+    setWalletConnected(p.wallet_address);
   }
 
   // ── Phantom account changes ──────────────────────────────────────────────────
@@ -979,7 +979,7 @@
 
   // ── Auto-connect if returning from Phantom deeplink (mobile) ─────────────────
   // If window.solana is now available (we're inside Phantom browser), connect immediately
-  if (isMobile() && isPhantomBrowser() && !p.wallet_adresse) {
+  if (isMobile() && isPhantomBrowser() && !p.wallet_address) {
     try {
       const resp = await window.solana.connect({ onlyIfTrusted: true });
       const addr = resp.publicKey.toString();
